@@ -1,8 +1,8 @@
 |Command        |Aliases|Arguments|Description|Example(s)|
 |---------------|-------|---------|-----------|----------|
-|/ban           |       |`reason#` `duration` `@username\|userID`|Bans a user in the room with given username or userID, reason# and duration.|`/ban 1 h @baduser`, `/ban 4 f 1234567`|
-|/kick          |       |`reason#` `@username\|userID`|Bans a user in the room with given username or userID and reason#, then unbans them 2.5 seconds later.|`/kick 2 @username`, `/kick 5 1234567`|
-|/mute          |       |`reason#` `duration` `@username\|userID`|Mutes a user in the room with given username or userID, reason# and duration.|`/mute 3 s @user`, `/mute 2 m 1234567`|
+|/ban           |       |`reason#` `duration` `@username|userID`|Bans a user in the room with given username or userID, reason# and duration.|`/ban 1 h @baduser`, `/ban 4 f 1234567`|
+|/kick          |       |`reason#` `@username|userID`|Bans a user in the room with given username or userID and reason#, then unbans them 2.5 seconds later.|`/kick 2 @username`, `/kick 5 1234567`|
+|/mute          |       |`reason#` `duration` `@username|userID`|Mutes a user in the room with given username or userID, reason# and duration.|`/mute 3 s @user`, `/mute 2 m 1234567`|
 |/banreasons    |/br    |         |Displays a list of valid ban reasons to be used with **/ban**.||
 |/mutereasons   |/mr    |         |Displays a list of valid mute reasons to be used with **/mute**.||
 |/bandurations  |/bd    |         |Displays a list of valid ban durations to be used with **/ban**.||
