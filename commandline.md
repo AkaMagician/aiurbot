@@ -13,7 +13,7 @@
 |/unmute        |       |`userID` |Unmutes a user with the given userID.|`/unmute 1234567`|
 |/removestaff   |/rmstaff|`userID`|Removes a user with the given userID from the room's staff.|`/rmstaff 1234567`|
 |/unqueue       |/undj, /removedj, /rmdj|`userID`|Removes a user with the given userID from the waitlist.|`/rmdj 1234567`|
-|/cycle         |       |`[on \| off]`|Displays current waitlist cycle status. If **on** is given, turns cycle ON. If **off**, turns cycle OFF.|`/cycle on`, `/cycle off`|
+|/cycle         |       |`[on | off]`|Displays current waitlist cycle status. If **on** is given, turns cycle ON. If **off**, turns cycle OFF.|`/cycle on`, `/cycle off`|
 |/playlist      |/pl    |         |Displays name of currently active playlist.|
 |/setplaylist   |/setpl |`playlistID`|Activates a playlist **on your account** with the given playlistID.|`/setpl 45678901`|
 |/deleteplaylist|/deletepl|`playlistID`|Deletes a playlist **on your account** with the given playlistID.|`/deletepl 45678901`|
