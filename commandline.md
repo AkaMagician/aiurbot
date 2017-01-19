@@ -10,13 +10,12 @@
 |/unban         |       |`userID` |Unbans user with the given userID.|`/unban 1234567`|
 |/banlist       |       |         |Retrieves the room's banlist and displays it. Debug purposes.|
 |/deletemsg     |/delmsg, /dm|`chatID`|Deletes a chat message with the given chatID. Looks something like **0123456-1234567890123**|`/dm 1234567-1417172092351`|
-|/unmute        |       |`userID` |Unmutes a user with the given userID.|`/unmute 1234567`|
-|/removestaff   |/rmstaff|`userID`|Removes a user with the given userID from the room's staff.|`/rmstaff 1234567`|
-|/unqueue       |/undj, /removedj, /rmdj|`userID`|Removes a user with the given userID from the waitlist.|`/rmdj 1234567`|
+|/unmute        |       |`@username|userID` |Unmutes a user with the given username or userID.|`/unmute 1234567`, `/unmute @userinroom`|
+|/removestaff   |/rmstaff|`@username|userID`|Removes a user with the given username or userID from the room's staff.|`/rmstaff 1234567`, `/rmstaff @userinroom`|
+|/unqueue       |/undj, /removedj, /rmdj|`@username|userID`|Removes a user with the given username or userID from the waitlist.|`/rmdj 1234567`|
 |/cycle         |       |`[on | off]`|Displays current waitlist cycle status. If **on** is given, turns cycle ON. If **off**, turns cycle OFF.|`/cycle on`, `/cycle off`|
 |/playlist      |/pl    |         |Displays name of currently active playlist.|
 |/setplaylist   |/setpl |`playlistID`|Activates a playlist **on your account** with the given playlistID.|`/setpl 45678901`|
-|/deleteplaylist|/deletepl|`playlistID`|Deletes a playlist **on your account** with the given playlistID.|`/deletepl 45678901`|
 |/writeplaylists|       |         |Retrieves a list of playlists on your account and saves it to data/playlists.json. Used for debug purposes.|
 |/clear         |/cls   |         |Clears screen.|
 |/exit          |/quit  |         |**Safely closes the program. Important.**|
@@ -33,9 +32,20 @@
 |/waitlist      |/djlist, /djs, /wl|`[join|j, leave|l, lock, unlock]` `[clear (if lock)]`|If no argument, displays the waitlist and its lock/cycle status. join: joins waitlist. leave: leaves waitlist. lock: locks waitlist; if **clear** is given, clears waitlist too. unlock: unlocks waitlist.|`/wl lock clear`, `/wl unlock`, `/wl j`, `/wl l`|
 |/reloadsettings|/rs    |         |Loads settings.json|
 |/saveseen      |/ss    |         |Writes current data of seen users to data/seenUsers.json|
-|/listsettings  |       |         |Displays a list of BotSettings option names.|
-|/set           |       |`\<name of BotSettings option\>` `\<value to set\>`|Changes the value of a given BotSettings option, if valid.|`/set timestampColor cyan`, `/set welcomeusers true`|
-|/getuser       |/showuser, /user|`username\|userID`|If user is in the room, displays info about the given user. If no argument, returns your own info.|`/user`, `/user someoneinroom`, `/user 1234567`|
+|/listsettings  |       |         |Displays a list of BotSettings options and their current values.|
+|/set           |       |`<name of BotSettings option>` `<value to set>`|Changes the value of a given BotSettings option, if valid.|`/set timestampColor cyan`, `/set welcomeusers true`|
+|/getuser       |/showuser, /user|`username|userID`|If user is in the room, displays info about the given user. If no argument, returns your own info.|`/user`, `/user someoneinroom`, `/user 1234567`|
 |/trigger       |       |`[trigger char]`|Displays current trigger. If valid argument is given, sets the trigger to given argument.|`/trigger $`|
 |/me            |       |`*any text*`|Default /me behavior on plug.dj.|`/me hello`|
-|/commands      |/cmds  |         |Lists active and inactive chat commands.|
+|/commands      |/cmds  |         |Lists active and inactive chat commands, also shows the link to this file.|
+|/banlist       |       |         |Downloads the ban list and saves it to data/banList_(roomslug).txt. Will overwrite.|
+|/stafflist     |       |         |Downloads the staff list and saves it to data/staffList_(roomslug).txt. Will overwrite.|
+|/syncusers     |       |         |Gets the list of users from the server. Should only be used if the userlist screws up or has "unavailable" users, which it shouldn't.|
+|/roles         |       |         |Displays a list of valid role values for use with **/addstaff**.|
+|/addstaff      |       |`role#` `@username|userID`|Adds a user to the staff with the given role.|`/addstaff 2 @new_bouncer`|
+|/logout        |       |         |Meant to log out from a plug.dj session, but not functional at the moment. Use `/exit` instead for now.|
+|/dc            |       |         |Displays a raw list of users' IDs that have recently disconnected while on the waitlist, with their previous position and time they disconnected. Used for debugging.|
+|/loadblacklists|       |         |Reloads blacklists from their respective json files. Can be used after editing a blacklist with a text editor.|
+|/friend        |/f     |`add|a` `userID`|Sends a friend request to the given userID. If that userID sent you a request first, accepts the request instead. Subject to removal since the friends list system is trivial for a bot.|
+|/welcome       |       |`[set]`  |If "set" is not specified, displays room's current welcome message. Otherwise, changes the welcome message to whatever is typed after "set".|
+|/description   |       |`[set]`  |If "set" is not specified, displays room's current description. Otherwise, changes the description to whatever is typed after "set". Use \n for newlines.|
