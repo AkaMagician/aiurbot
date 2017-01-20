@@ -8,7 +8,7 @@
     "timestampColor": "cyan",
     "titleShowRoom": true,
     "titleShowMemory": true,
-	"titleShowUsers": true,
+    "titleShowUsers": true,
     "chatHighlightMention": true,
     "chatShowCID": true,
     "chatShowWoot": false,
