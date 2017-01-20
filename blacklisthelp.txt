@@ -1,0 +1,18 @@
+Blacklists are .json files that belong in the blacklists folder.
+They must be comprised of a single array of strings.
+Each string just has to be: format:itemID
+format can be either 1 or 2 for youtube or soundcloud respectively,
+and the itemID must be the ID for the song, such as the video ID for a youtube video, or
+the track ID of a soundcloud song.
+Example:
+
+[
+	"1:dQw4w9WgXcQ",
+	"2:103464380"
+]
+
+A soundcloud track's ID is not in the URL, rather it is in the Embed code for a song.
+There are probably other ways to get it, but you'll want to look for a link such as api.soundcloud.com/tracks/#
+where # is the ID you are looking for.
+
+Once you make a blacklist file, you must then add it 

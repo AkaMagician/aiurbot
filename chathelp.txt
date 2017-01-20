@@ -1,0 +1,35 @@
+﻿Timestamp  |  User ID (or event message type)  |  User Flair  |  <Username>  |  Message
+
+Flair:
+    ○       --      Resident DJ
+    >       --      Bouncer
+    >>      --      Manager
+    >>>     --      Co-Host
+    >>>!    --      Host
+  $         --      Global Role > 0 (bright green: Brand Ambassador, bright blue: Admin)
+   *        --      Subscriber (yellow: gold sub, white: silver sub)
+         #! --      Bot Author
+         ~  --      Bot (you)
+         
+Name colors:
+    Bright Blue     --  Admin
+    Bright Green    --  Brand Ambassador
+    Magenta         --  User's role in the room is Resident DJ up to Co-Host.
+    Bright Magenta  --  Host of the room.
+    Red             --  Bot Author
+    Cyan            --  Bot
+    White           --  Silver Subscriber (role 0)
+    Yellow          --  Gold Subscriber (role 0)
+    Bright White    --  No role or sub. Standard user.
+    Bright Black    --  Guest user (only displayed when they join or leave)
+    
+Valid color names (for options such as timestamp color, etc; case sensitive):
+    - black         - blackBright
+    - blue          - blueBright
+    - green         - greenBright
+    - cyan          - cyanBright
+    - red           - redBright
+    - magenta       - magentaBright
+    - yellow        - yellowBright
+    - white         - whiteBright
+    
