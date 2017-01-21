@@ -15,6 +15,8 @@ easy mode:
 - when ready, run "node index.js"
 - if HOME is still default, type `/j ROOMSLUG` where ROOMSLUG is the roomslug of the room you want to join
   - roomslugs can be found at the end of a room's URL, e.g. plug.dj/**this-is-a-room-slug**
+  
+# ALWAYS USE `/exit` TO CLOSE THE BOT. NEVER FORCE CLOSE.
 
 You may also use `settings.json` to specify your settings. However, `EXTERNALSETTINGS` must be set to `true` (line 23 within index.js).
 
