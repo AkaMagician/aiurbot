@@ -5,7 +5,7 @@
 *   expandable plug.dj NodeJS bot with some basicBot adaptations (I did not write basicBot!) and then some.
 *   as this is specially for a certain room, some commands are also adapted from the custom basicBot additions github.com/ureadmyname added.
 *   written by zeratul- (https://github.com/zeratul0) specially for https://plug.dj/its-a-trap-and-edm
-*   version 0.3.3
+*   version 0.3.4
 *   ALPHA TESTING
 *   Copyright 2016-2017 zeratul0
 *   You may edit and redistribute this program for your own personal (not commercial) use as long as the author remains credited. Any profit or monetary gain
@@ -54,7 +54,7 @@ const PLATFORM = ((process && process.platform) ? process.platform : "win32");  
 const SC_CLIENT_ID = 'f4fdc0512b7990d11ffc782b2c17e8c2';  //SoundCloud Client ID
 const YT_API_KEY = 'AIzaSyBTqSq0ZhXcGerXRgCKBZSd_BxaM0OZ9g4';  //YouTube API Key
 const TITLE = 'AiurBot';  //bot title
-const VER = '0.3.3 alpha';  //bot version
+const VER = '0.3.4 alpha';  //bot version
 const AUTHOR = 'zeratul0';  //bot author (github)
 const STARTTIME = Date.now();  //the time the bot was started
 const DEBUG = false;  //if true, logs certain internal things (spammy!)
@@ -76,6 +76,7 @@ let STUCKSKIPTIME = null;
 let wss = null;  //websocket
 let room = null;  //room
 let MENTIONREGEX = null;  //regex for mentions in chat, see handleChat
+let DIDAUTOLOGIN = false;
 
 let sessJar = {};  //user session jar generated on login
 let me = {};  //your user data, grabbed each time you join a room
@@ -107,7 +108,7 @@ let BotSettings = {
     
     titleShowRoom:true,     //show current room in title
     titleShowMemory:true,   //show memory usage in title
-	titleShowUsers:true,    //show user count in title
+    titleShowUsers:true,    //show user count in title
     
     chatHighlightMention:true,  //use @ highlights
     chatShowCID:true,       //shows full CID of chat message; if false, just shows UID
@@ -511,15 +512,13 @@ function login() {
         console.log('\n' + cc.yellowBright("HOME is set to -8299715266665171479, the default placeholder room. Change it within index.js to set the default room the bot joins upon logging in."));
     }
     
-    const pluglogin = function(u,p) {
+    const pluglogin = function(u,p,isAuto) {
         plugLogin.user(u, p, {authToken: true}, (err, res) => {
             u = p = "";
-            if (err) {login(cc.redBright('ERROR: ' + err.message + (err.status === "notAuthorized" ? '\nDid you incorrectly type your username or password?' : '')));}//throw err;
+            if (err) {login((isAuto ? cc.red("\nAuto login failed. Check your userdata.js.\n") : '') + cc.redBright('ERROR: ' + err.message + (err.status === "notAuthorized" ? '\nDid you incorrectly type your username or password?' : '')));}//throw err;
             else {sessJar = res.jar; connect(res.token)}
         });
     };
-    
-    let ud = userdata();
 
     setTitle(false);
     startTimer("memory");
@@ -527,8 +526,12 @@ function login() {
     if (arguments[0])
         console.log(arguments[0]);
     
-    if (ud) {
-        return pluglogin(ud.username, ud.password);
+    if (!DIDAUTOLOGIN) {
+        const ud = userdata();
+        if (ud) {
+            DIDAUTOLOGIN = true;
+            return pluglogin(ud.username, ud.password, true);
+        }
     }
 
     console.log(cc.redBright('\n-- plug.dj login --\n'));
@@ -2151,6 +2154,23 @@ function doCommand(msg) {
             '/adddj':()=>{
                 simpleNameFn(function(id) {
                     addUserToWaitlist(id);
+                });
+            },
+		
+            '/update':()=>{
+                req.get('https://rawgit.com/zeratul0/aiurbot/master/version.json', {json: true}, (e,r,b)=>{
+                    if (e) error(cc.red(e));
+                    else if (b && typeof b === "string") {
+                        const checkedVersion = b.replace(/\n/g, '');
+                        info(cc.magentaBright("https://github.com/zeratul0/aiurbot"));
+                        if (checkedVersion === VER) {
+                            return info(cc.greenBright("Requested version, got ") + cc.cyanBright(checkedVersion) + cc.greenBright(", the same as the current version."));
+                        } else {
+                            info(cc.cyan("Requested version, got ") + cc.greenBright(checkedVersion) + cc.cyan(", which is different from the current version: ") + cc.redBright(VER));
+                            info(cc.cyan("Check the above github link and replace your index.js if needed."));
+                            return;
+                        }
+                    }
                 });
             }
         },
