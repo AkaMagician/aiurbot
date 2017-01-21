@@ -17,7 +17,7 @@
 *   Referred to https://github.com/SooYou/plugged for endpoint info, and stackoverflow for help with creating a working CLI input
 */
 
-const HOME = 'its-a-trap-and-edm';  //home room's roomslug
+const HOME = '-8299715266665171479';  //home room's roomslug
 
 const STARTASNORMALUSER = false;  //if true, starts bot with all commands and automatic moderation disabled
 const EXTERNALSETTINGS = false;  //if true, allows loading of settings.json
