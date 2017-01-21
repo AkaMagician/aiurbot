@@ -51,3 +51,4 @@
 |/description   |       |`[set]`  |If "set" is not specified, displays room's current description. Otherwise, changes the description to whatever is typed after "set". Use \n for newlines.|
 |/movedj        |       |`position#` `@username|userID`|If the user given is on the waitlist, moves the given user to the given position #.|
 |/adddj         |/queue |`@username|userID`|If the given user is not on the waitlist, adds them to the waitlist.|
+|/update        |       ||Grabs version.json within the git repo, and compares it against the current bot version.|
