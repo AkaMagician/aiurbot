@@ -157,6 +157,7 @@ let BotSettings = {
         //"name of command (make sure it has no spaces and does not conflict with an existing command!)" : "this will be sent in chat",
         //"messagecmd2":"output this"
         //...
+	"changelog":"/me Find the AiurBot changelog here: https://git.io/vM9FP"
     },
     skipReasons:{
         //"reason" : "message that is sent",
