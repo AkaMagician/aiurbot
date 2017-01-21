@@ -149,32 +149,19 @@ let BotSettings = {
     motd:"",  //motd message to send
     
     announcements:[
-        "/me Do you enjoy other genres besides EDM? Then be here on our Monday and Friday Shuffle days, when any genre is allowed! Shuffle time is run 12am EST till 12am PDT",
-        "/me Remember to click the star at the top of the page to favorite this room!! http://i.imgur.com/chNflCb.png",
-        "/me Remember to bookmark our Dubtrack room! If plug.dj ever goes down, you can hang out with us here: https://www.dubtrack.fm/join/its-a-trap-and-edm",
-        "/me We have a discord room! You can come and chat with us here: https://discord.gg/0oAkP2A4t9ryA7Yh",
-        "/me Want to give input to our community? Feel free to answer our community question: http://www.questionpro.com/t/ALh4WZVEYd",
-        "/me The room rules can be found here: http://goo.gl/5SNSgo",
-        "/me Disconnected while waiting on the waitlist? Use the \"dc\" command to get your spot back! However, this will not work if your position passed while you were gone."
+        //"announcements are comprised simply of strings. these will be cycled through and sent whenever the announcementInterval passes.",
+        //"second announcement here"
+        //...
     ],
     messageCommands:{
-        "shuffle":"/me Do you enjoy other genres besides EDM? Then be here on our Monday and Friday Shuffle days, when any genre is allowed! Shuffle time is run 12am EST till 12am PDT",
-        "fav":"/me Remember to click the star at the top of the page to favorite this room!! http://i.imgur.com/chNflCb.png",
-        "dubtrack":"/me Remember to bookmark our Dubtrack room! If plug.dj ever goes down, you can hang out with us here: https://www.dubtrack.fm/join/its-a-trap-and-edm",
-        "discord":"/me We have a discord room! You can come and chat with us here: https://discord.gg/0oAkP2A4t9ryA7Yh",
-        "question":"/me Want to give input to our community? Feel free to answer our community question: http://www.questionpro.com/t/ALh4WZVEYd",
-        "rules":"/me The room rules can be found here: http://goo.gl/5SNSgo",
-        "theme":"/me We allow any type of EDM in this room. During shuffle days, anything can be played. EDM Genres: http://en.wikipedia.org/wiki/List_of_electronic_music_genres",
-        "subinfo":"/me What's a subscription? http://goo.gl/vohqsh",
-        "rouletteinfo":"/me If roulette is enabled, it will run every hour. The winner of the roulette gets to be bumped up to 1 in the waitlist!",
-        "shufflezones":"/me Timezones considered for shuffle days: http://i.imgur.com/8teoFKk.png",
-        "stafftips":"/me Tips for becoming a staff member: http://git.io/vG7Wj",
-        "steam":"/me Want to be part of our Steam Community? Join here! http://steamcommunity.com/groups/plugdjitsaTRAPandEDM",
-        "changelog":"/me Find the AiurBot changelog here: https://git.io/vM9FP"
+        //"name of command (make sure it has no spaces and does not conflict with an existing command!)" : "this will be sent in chat",
+        //"messagecmd2":"output this"
+        //...
     },
     skipReasons:{
+        //"reason" : "message that is sent",
         "theme":"this song does not fit the room theme.",
-        "op":"this song is on the OP blacklist. List of OP song IDs: http://pastebin.com/FMD6Nby2 and their names: http://git.io/vOTmj",
+        "op":"this song is on the OP blacklist.",
         "blacklisted":"this song was found on a blacklist.",
         "history":"this song is already in the room's song history.",
         "mix":"you played a mix, which is against the rules.",
