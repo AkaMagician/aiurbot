@@ -16,7 +16,9 @@ easy mode:
 - if HOME is still default, type `/j ROOMSLUG` where ROOMSLUG is the roomslug of the room you want to join
   - roomslugs can be found at the end of a room's URL, e.g. plug.dj/**this-is-a-room-slug**
 
-You may also use settings.json to specify your settings. However, EXTERNALSETTINGS must be set to true (line 23 within index.js).
+You may also use `settings.json` to specify your settings. However, `EXTERNALSETTINGS` must be set to `true` (line 23 within index.js).
+
+`STARTASNORMALUSER` on line 22 can be set to `true` to disable chat commands and automated features.
 
 For Windows, I recommend ConEmu as a command prompt and Unifont as the font.
 
