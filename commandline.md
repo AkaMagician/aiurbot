@@ -49,3 +49,5 @@
 |/friend        |/f     |`add|a` `userID`|Sends a friend request to the given userID. If that userID sent you a request first, accepts the request instead. Subject to removal since the friends list system is trivial for a bot.|
 |/welcome       |       |`[set]`  |If "set" is not specified, displays room's current welcome message. Otherwise, changes the welcome message to whatever is typed after "set".|
 |/description   |       |`[set]`  |If "set" is not specified, displays room's current description. Otherwise, changes the description to whatever is typed after "set". Use \n for newlines.|
+|/movedj        |       |`position#` `@username|userID`|If the user given is on the waitlist, moves the given user to the given position #.|
+|/adddj         |/queue |`@username|userID`|If the given user is not on the waitlist, adds them to the waitlist.|
