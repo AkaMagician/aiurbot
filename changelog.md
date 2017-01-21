@@ -1,3 +1,3 @@
 - January 20, 2017
-  - 0.3.0
+  - 0.3.3
     - initial version
