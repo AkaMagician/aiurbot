@@ -1,3 +1,9 @@
 - January 20, 2017
-  - 0.3.3
+  - 0.3.4 alpha
+    - Changes
+      - prevent loop when auto login credentials are invalid
+      - add /update CLI command
+    - Known issues
+      - "motd" cannot properly be set using the "set" chat command
+  - 0.3.3 alpha
     - initial version
