@@ -2504,7 +2504,6 @@ function updateRoomInfo(obj) {
 }
 
 //http://stackoverflow.com/questions/12672193/fixed-position-command-prompt-in-node-js
-//some code in startInput here is adapted from Hors Sujet's answer in the above link
 function startInput() {
 
     if (STARTEDINPUT)
@@ -4284,6 +4283,8 @@ function cleanState() {
     rl.close();
 }
 
+//http://stackoverflow.com/questions/12672193/fixed-position-command-prompt-in-node-js
+//write() is adapted from Hors Sujet's answer in the above link
 function write(args) {
     let t = Math.ceil((rl.line.length + 3) / process.stdout.columns);
     let text = util.format.apply(console, args);
