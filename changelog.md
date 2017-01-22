@@ -1,3 +1,22 @@
+- January 22, 2017
+  - 0.3.5 alpha
+    - Changes
+      - Default announcementInterval is now 9 minutes (540000ms)
+      - Default motdInterval is now 5 minutes (300000ms)
+      - Autoskip for stuck songs is now 30 seconds after the song's total time, instead of 60 seconds after
+      - Delays on chat command messages, help messages, and roulette messages are now removed
+      - Fix error upon joining back to old room when trying to join an invalid room
+      - Event logs (with DEBUG enabled) now include the roomname
+      - Fixed being unable to set the host if you are already the host, with /addstaff
+      - HTML entities are now decoded in usernames when welcoming users
+      - Changed Resident DJ flair to @
+      - Added Github project link to the "about" chat command
+      - /syncusers should now update your own role
+      - Updates the old host's role if the host of the room promotes someone else to be the host
+      - Fixed "set" command unable to change "motd" or integer settings
+      - STARTASNORMALUSER options are disabled at the time of login instead of script start
+    - Known Issues
+      - none so far
 - January 20, 2017
   - 0.3.4 alpha
     - Changes
