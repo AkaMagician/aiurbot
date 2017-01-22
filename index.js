@@ -5,7 +5,7 @@
 *   expandable plug.dj NodeJS bot with some basicBot adaptations (I did not write basicBot!) and then some.
 *   as this is specially for a certain room, some commands are also adapted from the custom basicBot additions github.com/ureadmyname added.
 *   written by zeratul- (https://github.com/zeratul0) specially for https://plug.dj/its-a-trap-and-edm
-*   version 0.3.4
+*   version 0.3.5
 *   ALPHA TESTING
 *   Copyright 2016-2017 zeratul0
 *   You may edit and redistribute this program for your own personal (not commercial) use as long as the author remains credited. Any profit or monetary gain
@@ -24,9 +24,9 @@ const EXTERNALSETTINGS = false;  //if true, allows loading of settings.json
 
 //list of blacklists
 //  'blacklistName' : ['blacklists/name_of_file.json', [empty array to populate]],
-//  'op': ['blacklists/op.json', []]
+
 let blacklists = {
-    'op': ['blacklists/op.json', [] ],
+    //'op': ['blacklists/op.json', [] ],
     'example': ['blacklists/example.json', [] ]
 };
 
@@ -54,7 +54,7 @@ const PLATFORM = ((process && process.platform) ? process.platform : "win32");  
 const SC_CLIENT_ID = 'f4fdc0512b7990d11ffc782b2c17e8c2';  //SoundCloud Client ID
 const YT_API_KEY = 'AIzaSyBTqSq0ZhXcGerXRgCKBZSd_BxaM0OZ9g4';  //YouTube API Key
 const TITLE = 'AiurBot';  //bot title
-const VER = '0.3.4 alpha';  //bot version
+const VER = '0.3.5 alpha';  //bot version
 const AUTHOR = 'zeratul0';  //bot author (github)
 const STARTTIME = Date.now();  //the time the bot was started
 const DEBUG = false;  //if true, logs certain internal things (spammy!)
@@ -126,7 +126,7 @@ let BotSettings = {
     acceptRemoteCmd:false,  //allow bot creator to use local commands from the chat
     allowRemoteBlacklistEdit:true,  //if true, allow "blacklist" command (that command must also be enabled to use it)
     
-    announcementInterval: 1200000, //ms; 20 minutes
+    announcementInterval: 540000, //ms; 9 minutes
     announcementRandom:false,   //if true, picks random announcements instead of going in order
     sendAnnouncements:true,    //if true, send announcements. if false, it's off
     
@@ -139,14 +139,14 @@ let BotSettings = {
     
     doAutoDisable:true,  //if true, sends !joindisable and !afkdisable every hour
     
-    autoStuckSkip:true, //if true, skips songs 60 seconds after their length if they are stuck.
+    autoStuckSkip:true, //if true, skips songs 30 seconds after their length if they are stuck.
     
     doSkipCheck:true,  //if true, checks skip conditions when a new song is played, but doesn't skip. MUST BE true for doAutoSkip to work; exists only to avoid using soundcloud/youtube APIs for checking unavailability if unnecessary
     doAutoSkip:true,  //if true, skips songs if they meet skip conditions. doSkipCheck MUST BE true
     hostBypassAutoSkip:true,  //if true, allows the host of the room to bypass autoskip conditions, unless the video is unavailable
     
     sendMOTD:false,  //if true, sends motd after each motdInterval
-    motdInterval: 1800000, //ms; 30 minutes
+    motdInterval: 300000, //ms; 5 minutes
     motd:"",  //motd message to send
     
     announcements:[
@@ -513,10 +513,21 @@ function login() {
     }
     
     const pluglogin = function(u,p,isAuto) {
+        
         plugLogin.user(u, p, {authToken: true}, (err, res) => {
             u = p = "";
             if (err) {login((isAuto ? cc.red("\nAuto login failed. Check your userdata.js.\n") : '') + cc.redBright('ERROR: ' + err.message + (err.status === "notAuthorized" ? '\nDid you incorrectly type your username or password?' : '')));}//throw err;
-            else {sessJar = res.jar; connect(res.token)}
+            else {
+                sessJar = res.jar;
+                connect(res.token);
+                if (STARTASNORMALUSER) {
+                    let i,
+                        settingsToDisable = ["doJoinMessage", "allowChatCommands", "welcomeUsers", "chatDeleteTriggerMessages", "acceptRemoteCmd", "sendAnnouncements", "useMessageCommands", "doAFKCheck", "doRoulette", "doAutoDisable", "doAutoSkip", "sendMOTD", "autoStuckSkip", "allowRemoteBlacklistEdit"];
+                    for (i = 0; i < settingsToDisable.length; i++) {
+                        BotSettings[settingsToDisable[i]] = false;
+                    }
+                }
+            }
         });
     };
 
@@ -546,7 +557,7 @@ function login() {
             rl.history = [];
             password = pw;
             console.log('');
-            pluglogin(un, pw);
+            pluglogin(un, pw, false);
         });
     });
 
@@ -565,7 +576,7 @@ function joinRoom(roomslug) {
     POST('_/rooms/join', {slug: roomslug}, (data)=>{
         if (data.status !== "ok") {
             error(cc.red("Error joining room: ") + cc.redBright(data.status));
-            if (prevRoom) joinRoom(room.slug);
+            if (prevRoom) joinRoom(prevRoom.slug);
             return;
         }
         console.log('\n'+cc.blackBright('-'.repeat(process.stdout.columns)));
@@ -875,13 +886,8 @@ function handleModStaff(data) {
                 log(LOGTYPES.STAFF+' '.repeat(HIGHWAY - 8)+colorizeName(mod) + cc.yellowBright(' changed ') + colorizeName(user) + cc.yellowBright('\'s role from ')+cc.cyan(roleToString(user.role))+cc.yellowBright(' to ') + cc.cyanBright(roleToString(data.u[0].p)) + cc.yellowBright('!'));
                 let users = room.userlist,
                     i;
-                for (i = 0; i < users.length; i++) {
-                    if (users[i].id === user.id) {
-                        users[i].role = data.u[0].p;
-                        room.userlist = users;
-                        return;
-                    }
-                }
+                
+                syncUsers();
             }
         }
         if (~user) action(user);
@@ -1185,7 +1191,7 @@ function handleAdvance(data) {
                             skipSong(me.username, "stuck", true);
                         }
                     }
-                }, (data.m.duration + 60)*1000);
+                }, (data.m.duration + 30)*1000);
                    
             }
             console.log('\n');
@@ -1381,7 +1387,7 @@ function handleEvent(e) {
     };
     
     if (DEBUG)
-        debug(cc.magenta("event received: ") + cc.magentaBright(event.name));
+        debug(cc.magenta("event received: ") + cc.magentaBright(event.name) + cc.magenta(" in room: ") + cc.magentaBright(event.room));
     
     const events = {
         'ack':()=>event.data === "1" ? console.log(cc.greenBright('Successfully connected to plug.dj!')) : console.log(cc.redBright('Did not connect to plug.dj.')),
@@ -1795,7 +1801,7 @@ function doCommand(msg) {
                     const role = parseInt(data[1]);
                     if (role < 1 || role > 5) {
                         return error(cc.red("Role must be between 1 and 5. Type /roles for a list"));
-                    } else if (role >= me.role) {
+                    } else if (me.role < 5 && role >= me.role) {
                         return error(cc.red("You cannot promote someone to your rank or above."));
                     } else {
                         if (strIsNum(data[2]))
@@ -2498,6 +2504,20 @@ function moveDJ(UID, toPosition, cb) {
     });
 }
 
+/*function giftUser(UID, amount, cb) {
+    UID = parseInt(UID);
+    amount = parseInt(amount);
+    if (!isNaN(UID) && !isNaN(amount)) {
+        POST('_/gift', {id: UID, amount: amount, response:""}, (data)=>{
+            if (data.status === "ok") {
+                if (typeof cb === "function") cb(data);
+            } else {
+                error(cc.red("Error sending gift: ") + cc.redBright(data.status));
+            }
+        });
+    }
+}*/
+
 function updateRoomInfo(obj) {
     //{name: roomName, description: roomDesc, welcome: roomWelcome}
     POST('_/rooms/update', obj);
@@ -2624,6 +2644,7 @@ function welcomeUser(id) {
         if (BotSettings.welcomeUsers) {
             let user = getUser(id);
             if (!~user || (~user && me && me.id && user.id === me.id)) return;
+            user.username = ent.decode(user.username);
             if (lw <= 0) {
                 sendMessage("/me Everybody welcome, "+user.username+"!",1000);
             } else {
@@ -2948,7 +2969,7 @@ function colorizeName(user, doFlair, bracket) {
             case 0:
                 flair+='     '; break;
             case 1:
-                flair+=cc.magenta('○    '); break;
+                flair+=cc.magenta('@    '); break;
             case 2:
                 flair+=cc.magenta('>    '); break;
             case 3:
@@ -3044,6 +3065,7 @@ function syncUsers() {
                     }
                     addSeenUser(users[i].id);
                 }
+                me.role = data.data[0].role;
                 users.push(me);
                 addSeenUser(me);
                 room.userlist = users;
@@ -3251,7 +3273,7 @@ Room.prototype.roulette = {
         clearTimeout(this.timer);
         this.users = [];
         this.active = true;
-        sendMessage('Roulette has begun! type ' + TRIGGER + 'join to enter, or ' + TRIGGER + 'leave to back out! Ends in 1 minute.', 500);
+        sendMessage('Roulette has begun! type ' + TRIGGER + 'join to enter, or ' + TRIGGER + 'leave to back out! Ends in 1 minute.');
         this.timer = setTimeout(function() {
             room.roulette._end(false);
         }, 60000);
@@ -3297,7 +3319,7 @@ Room.prototype.roulette = {
                 msg += "Roulette winner chosen! #" + winner.id + " was not found in the room, though.";
             }
         }
-        sendMessage(msg, 500);
+        sendMessage(msg);
     },
     '_cleanup': function() {
         
@@ -3326,10 +3348,10 @@ Room.prototype.roulette = {
         else {
             if (!~arrFind(this.users, id)) {
                 if (room.booth.currentDJ === id) {
-                    sendMessage('@' + user.username + ": The current DJ cannot participate in the roulette.", 500);
+                    sendMessage('@' + user.username + ": The current DJ cannot participate in the roulette.");
                 } else {
                     this.users.push(id);
-                    sendMessage('@' + user.username + " joined the roulette!", 500);
+                    sendMessage('@' + user.username + " joined the roulette!");
                 }
             }
         }
@@ -3348,7 +3370,7 @@ Room.prototype.roulette = {
                     if (leave) {
                         let user = getUser(id);
                         if (~user) {
-                            sendMessage('@' + user.username + " left the roulette.", 500);
+                            sendMessage('@' + user.username + " left the roulette.");
                         }
                     }
                     return;
@@ -3421,7 +3443,7 @@ function doChatCommand(data, user) {
                     if (help === "") return;
                     else {
                         if (!commands[cmd].state) help += " Inactive.";
-                        sendMessage('/me [@' + user.username + '] ' + help, 1000);
+                        sendMessage('/me [@' + user.username + '] ' + help);
                     }
                 }
             },
@@ -3540,8 +3562,12 @@ function doChatCommand(data, user) {
             'set':()=>{
                 if (splitMessage.length === 2) {
                     commands.set.exec(user.role, user.username, splitMessage[1], null);
-                } else if (splitMessage.length === 3) {
-                    commands.set.exec(user.role, user.username, splitMessage[1], splitMessage[2].toLowerCase());
+                } else if (splitMessage.length >= 3) {
+                    if (splitMessage[1].toLowerCase() === 'motd') {
+                        commands.set.exec(user.role, user.username, splitMessage[1], data.message.substr((TRIGGER + "set motd ").length).trim());
+                    } else {
+                        commands.set.exec(user.role, user.username, splitMessage[1], splitMessage[2].toLowerCase());
+                    }
                 } else return;
             },
             'english':()=>{
@@ -3629,13 +3655,13 @@ commands['8ball'] = new Command(true,0,"8ball <any text> :: Asks the Magic 8 Bal
         let ans = BotSettings.eightBallChoices;
         let sndmsg = "[@"+arguments[1]+"] ";
         sndmsg += ans[Math.floor(Math.random() * ans.length)];
-        sendMessage(sndmsg, 1000);
+        sendMessage(sndmsg);
     }
 });
 
 commands['about'] = new Command(true,0,"about :: Displays bot's \"about\" message. Any rank.",function() {
     if (arguments.length !== 1) return;
-    sendMessage("about :: " + TITLE + " v" + VER + " :: written by zeratul-", 1000);
+    sendMessage("about :: " + TITLE + " v" + VER + " :: written by zeratul- :: https://github.com/zeratul0/aiurbot");
 });
 
 commands['afktime'] = new Command(true,2,"afktime [@username|#userID] :: Returns the amount of time a user has been inactive. Gets your own info if no valid argument. Requires Bouncer+.",function() {
@@ -3650,7 +3676,7 @@ commands['afktime'] = new Command(true,2,"afktime [@username|#userID] :: Returns
         else
             sndmsg = arguments[1] + " is currently active.";
     }
-    sendMessage(sndmsg, 1000);
+    sendMessage(sndmsg);
 });
 
 commands['anagram'] = new Command(true,0,"anagram <7-30 character string> :: Returns an anagram of the given word(s), retrieved from www.anagramgenius.com. Any rank.",function(){
@@ -3663,7 +3689,7 @@ commands['anagram'] = new Command(true,0,"anagram <7-30 character string> :: Ret
     let sndmsg = "[@"+user.username+'] ';
     if (query.length < 7 || query.length > 30) {
         sndmsg += "Invalid input. Use 7-30 characters.";
-        sendMessage(sndmsg.trim(), 400);
+        sendMessage(sndmsg.trim());
     } else {
         req.get("https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20html%20where%20url%3D'http%3A%2F%2Fwww.anagramgenius.com%2Fserver.php%3Fsource_text%3D"+uriquery+"%26vulgar%3D1'&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys", {json: true}, function(e,r,b) {
             if (e) error(cc.red(e));
@@ -3672,7 +3698,7 @@ commands['anagram'] = new Command(true,0,"anagram <7-30 character string> :: Ret
                 if (result === undefined || result === '') return;
                 else result = result.slice(1,-1);
                 sndmsg += '<'+query+'> ==> '+result;
-                sendMessage(sndmsg.trim(), 400);
+                sendMessage(sndmsg.trim());
             }
         });
     } 
@@ -3699,12 +3725,12 @@ commands['blacklist'] = new Command(true,3,"blacklist <blacklist name> <add // r
                         error(cc.red("Error checking availability of song."));
                     } else if (state === 1) {
                         message = "/me @" + username +", that song is invalid or unavailable.";
-                        sendMessage(message, 1000);
+                        sendMessage(message);
                     } else if (state === 0) {
                         blacklists[listName][1].push(formatString);
                         message = "/me @" + username + ": Successfully added " + formatString + " to the blacklist, " + listName + ".";
                         saveBlacklist(listName);
-                        sendMessage(message, 1000);
+                        sendMessage(message);
                     } else {
                         error(cc.red("Unknown code when checking availability: " + cc.redBright(state)));
                     }
@@ -3726,7 +3752,7 @@ commands['blacklist'] = new Command(true,3,"blacklist <blacklist name> <add // r
         if (SAVE)
             saveBlacklist(listName);
         if (message !== "")
-            sendMessage(message, 1000);
+            sendMessage(message);
     }
 }, 5000);
 
@@ -3740,7 +3766,7 @@ commands['blacklists'] = new Command(true,3,"blacklists :: Returns list of valid
     }
     message = "/me [@" + username + "] Blacklists: " + bl.join(', ');
     if (message !== "")
-        sendMessage(message, 1000);
+        sendMessage(message);
 }, 2000);
 
 commands['commands'] = new Command(true,0,"commands :: Lists active commands and amount of inactive commands. Any rank.",function() {
@@ -3758,7 +3784,7 @@ commands['commands'] = new Command(true,0,"commands :: Lists active commands and
     if (sndmsg === []) sndmsg = "No commands currently active.";
     else sndmsg = sndmsg.join(',');
     
-    sendMessage('Commands (' + inactive + ' inactive): '+sndmsg, 1000);
+    sendMessage('Commands (' + inactive + ' inactive): '+sndmsg);
 });
 
 commands['dc'] = new Command(true,0,"dc :: Places you back into the waitlist at your old position ONLY IF you were disconnected while waiting. Any rank. Must be " + secsToLabelTime(MAX_DISC_TIME, true) + " since disconnecting.",function() {
@@ -3783,16 +3809,16 @@ commands['dc'] = new Command(true,0,"dc :: Places you back into the waitlist at 
             if (record.lastDisconnect <= 0) return;
             else if (lastPos >= 0 && (!~pos || pos < lastPos)) {
                 if (dur > MAX_DISC_TIME)
-                    sendMessage("[@" + username + "] You disconnected too long ago. Last disconnect: " + secsToLabelTime(time - record.lastDisconnect, true) + " ago.", 1000);
+                    sendMessage("[@" + username + "] You disconnected too long ago. Last disconnect: " + secsToLabelTime(time - record.lastDisconnect, true) + " ago.");
                 else if ((time - record.lastDisconnect) <= MAX_DISC_TIME) {
-                    sendMessage("[@" + username + "] Disconnected " + secsToLabelTime(time - record.lastDisconnect, true) + " ago, previously at position " + (lastPos+1) + ". Bumped in the waitlist.", 1000);
+                    sendMessage("[@" + username + "] Disconnected " + secsToLabelTime(time - record.lastDisconnect, true) + " ago, previously at position " + (lastPos+1) + ". Bumped in the waitlist.");
                     addUserToWaitlist(id, function() {
                         moveDJ(id, lastPos);
                         remUserDC(id);
                     });
                 }
             } else if (!~lastPos) {
-                sendMessage("[@" + username + "] Could not find a previous waitlist position for you. If you did disconnect, the waitlist may have fully cycled while you were gone.", 1000);
+                sendMessage("[@" + username + "] Could not find a previous waitlist position for you. If you did disconnect, the waitlist may have fully cycled while you were gone.");
             }
         }
     } else {
@@ -3818,7 +3844,7 @@ commands['candy'] = new Command(true,0,"candy <@username> :: Give someone a rand
         "a Baby Ruth", "a Heath bar", "a Toblerone", "a Wonka Bar", "an Aero Bar", "a Mars Bar",
         "a Rolo Bar", "a Twix Bar", "a Twizzler", "a KitKat"
     ];
-    sendMessage("/me @" + arguments[1] + " gave @" + toUser.username + " " + candies[Math.floor(Math.random() * candies.length)] + "!", 1000);
+    sendMessage("/me @" + arguments[1] + " gave @" + toUser.username + " " + candies[Math.floor(Math.random() * candies.length)] + "!");
 });
 
 commands['cookie'] = new Command(true,0,"cookie <@username> :: Give someone a cookie!",function(){
@@ -3847,17 +3873,17 @@ commands['cookie'] = new Command(true,0,"cookie <@username> :: Give someone a co
         "gives you an old cookie that was left out in the rain, it's moldy.",
         "bakes you fresh cookies, it smells amazing."
     ];
-    sendMessage("/me @" + toUser.username + ", @" + arguments[1] + " " + cookies[Math.floor(Math.random() * cookies.length)], 1000);
+    sendMessage("/me @" + toUser.username + ", @" + arguments[1] + " " + cookies[Math.floor(Math.random() * cookies.length)]);
 });
 
 commands['disable'] = new Command(true,3,"disable <command name> :: Disable a command. Requires Manager+.",function(){
     const cmdname = arguments[1];
     if (commands.hasOwnProperty(cmdname) && !~arrFind(['enable', 'disable'], cmdname)) {
         if (commands[cmdname].state === false) {
-            sendMessage("/me Did not disable \"" + cmdname + "\", it is already inactive.", 1000);
+            sendMessage("/me Did not disable \"" + cmdname + "\", it is already inactive.");
         } else {
             commands[cmdname].state = false;
-            sendMessage("/me Disabled \"" + cmdname + "\".", 1000);
+            sendMessage("/me Disabled \"" + cmdname + "\".");
         }
     }
 });
@@ -3866,10 +3892,10 @@ commands['enable'] = new Command(true,3,"enable <command name> :: Enable a comma
     const cmdname = arguments[1];
     if (commands.hasOwnProperty(cmdname) && !~arrFind(['enable', 'disable'], cmdname)) {
         if (commands[cmdname].state === true) {
-            sendMessage("/me Did not enable \"" + cmdname + "\", it is already active.", 1000);
+            sendMessage("/me Did not enable \"" + cmdname + "\", it is already active.");
         } else {
             commands[cmdname].state = true;
-            sendMessage("/me Enabled \"" + cmdname + "\".", 1000);
+            sendMessage("/me Enabled \"" + cmdname + "\".");
         }
     }
 });
@@ -3912,7 +3938,7 @@ commands['english'] = new Command(true,2,"english <@username> :: Notify a user i
         if (!~user) return;
         let langMsg = langs[user.language];
         if (langMsg === undefined) langMsg = "";
-        sendMessage("@" + user.username + ": " + langMsg + "Please speak english.", 1000);
+        sendMessage("@" + user.username + ": " + langMsg + "Please speak english.");
     });
 });
 
@@ -3946,7 +3972,7 @@ commands['gif'] = new Command(true,0,"gif <tags> :: Grabs a random image from Gi
                         }
                     }
                     if (image && image !== "") {
-                        sendMessage("/me [@" + username + "] " + image + " [Tags: " + spl.join(", ") + "]", 1000);
+                        sendMessage("/me [@" + username + "] " + image + " [Tags: " + spl.join(", ") + "]");
                     }
                 }
             });
@@ -3991,7 +4017,7 @@ commands['props'] = new Command(true,0,"props :: Show some appreciation for the 
         msg = props[Math.floor(Math.random() * props.length)];
     }
     if (msg.trim() !== "")
-        sendMessage("/me @" + arguments[1] + " gave props to @" + dj.username + ", \"" + msg + "!\"", 750);
+        sendMessage("/me @" + arguments[1] + " gave props to @" + dj.username + ", \"" + msg + "!\"");
 });
 
 commands['roll'] = new Command(true,0,"roll [<1-10>|<1-20d1-999999999>] :: Returns a random number with given amount of digits, or rolls dice. Default: 2 digits. Any rank.",function(){
@@ -4049,7 +4075,7 @@ commands['roll'] = new Command(true,0,"roll [<1-10>|<1-20d1-999999999>] :: Retur
             sndmsg += ' hehe xd';
         }
     }
-    sendMessage(sndmsg,1000);
+    sendMessage(sndmsg);
 });
 
 commands['seentime'] = new Command(true,2,"seentime [@username|#userID] :: Returns the total amount of time a user has been seen in the room. Gets your own info if no valid argument. Requires Bouncer+.",function() {
@@ -4063,7 +4089,7 @@ commands['seentime'] = new Command(true,2,"seentime [@username|#userID] :: Retur
     } else {
         sndmsg = arguments[1]+" was not found.";
     }
-    sendMessage(sndmsg, 1000);
+    sendMessage(sndmsg);
 });
 
 commands['set'] = new Command(true,3,"set <option> <value> :: Sets a bot option to the given value. If no value is given, returns the current value of it. List of valid options: https://git.io/vM9aD Requires Manager+.",function(){
@@ -4108,21 +4134,22 @@ commands['set'] = new Command(true,3,"set <option> <value> :: Sets a bot option 
             else if (strIsNum(val)) val = parseInt(val);
             
             if (typeof val === typeof valid[option]) {
-                if (typeof val === "number") {
+                if (BotSettings[getName()] === val) message = getName() + " is already set to " + val + ".";
+                else if (typeof val === "number") {
                     if ((option === "announcementinterval" || option === "motdinterval") && val < 5000)
                         message = "That is an invalid interval amount. Must be 5000+.";
-                } else {
-                    if (BotSettings[getName()] === val) message = getName() + " is already set to " + val + ".";
-                    else {
+                    else
                         BotSettings._fn.changeSetting(option, val);
                         message = "Changed " + getName() + " to: " + val;
-                    }
+                } else {
+                    BotSettings._fn.changeSetting(option, val);
+                    message = "Changed " + getName() + " to: " + val;
                 }
             }
         }
     }
     if (message !== "")
-        sendMessage("/me [@" + username + "] " + message, 500);
+        sendMessage("/me [@" + username + "] " + message);
 });
 
 commands['shots'] = new Command(true,0,"shots|shot|k1tt [@username] :: Buys a random shot for a user, or yourself! Any rank.",function() {
@@ -4163,18 +4190,18 @@ commands['shots'] = new Command(true,0,"shots|shot|k1tt [@username] :: Buys a ra
     let message = "";
     if (toUser !== -1 && (toUser === username || (toUser !== username && ~toUser && toUser.id === id))) {
         if (id === me.id) {
-            message = "I bought myself a shot of " + shot + "!";
+            message = "/me takes a shot of " + shot + ".";
         } else {
             message = "@" + username + " bought themselves a shot of " + shot + "!";
         }
-    } else if (~toUser) {
+    } else if (toUser && ~toUser) {
         if (toUser.id === me.id) {
             message = "@" + username + " bought me a shot of " + shot + "!";
         } else {
             message = "@" + username + " bought @" + toUser.username + " a shot of " + shot + "!";
         }
     } else return;
-    sendMessage(message, 1000);
+    sendMessage(message);
 });
 
 commands['skip'] = new Command(true,2,"skip [reason] :: Skips current song with optional reason, if valid. Requires Bouncer+.",function() {
@@ -4196,7 +4223,7 @@ commands['skipreasons'] = new Command(true,2,"skipreasons :: Lists reasons that 
         temp = temp.join(", ");
         sndmsg += temp;
     }
-    sendMessage(sndmsg, 1000);
+    sendMessage(sndmsg);
 });
 
 commands['stats'] = new Command(true,1,"stats [@username|#userID] :: Returns the user's recorded amount of plays and votes received. Gets your own info if no valid argument. Requires Resident DJ+.",function() {
@@ -4204,11 +4231,11 @@ commands['stats'] = new Command(true,1,"stats [@username|#userID] :: Returns the
     let sndmsg = "";
     if (room && seen[room.slug] && seen[room.slug][arguments[2]]) {
         let usr = seen[room.slug][arguments[2]];
-        sndmsg = arguments[1]+"'s overall stats: Plays:"+usr.plays+", W:"+usr.votes.woot+", G:"+usr.votes.grab+", M:"+usr.votes.meh+". Woot/Meh Ratio: "+(usr.votes.meh ? (usr.votes.woot/usr.votes.meh) : "∞");
+        sndmsg = arguments[1]+"'s overall stats: Plays:"+usr.plays+", W:"+usr.votes.woot+", G:"+usr.votes.grab+", M:"+usr.votes.meh+". Woot/Meh Ratio: "+(usr.votes.meh ? (usr.votes.woot/usr.votes.meh) : "8");
     } else {
         sndmsg = arguments[1]+" was not found.";
     }
-    sendMessage(sndmsg, 1000);
+    sendMessage(sndmsg);
 });
 
 commands['swap'] = new Command(true,3,"swap @user1 @user2 :: Swaps positions of two users in the waitlist. At least one must be in the waitlist. Requires Manager+.", function () {
@@ -4253,14 +4280,14 @@ commands['swap'] = new Command(true,3,"swap @user1 @user2 :: Swaps positions of 
 commands['trigger'] = new Command(true,0,"trigger :: Returns current trigger of the bot. This can be called with any valid trigger character. Any rank.",function() {
     validateTrigger();
 
-    sendMessage('Current command trigger: '+TRIGGER, 1000);
+    sendMessage('Current command trigger: '+TRIGGER);
 });
 
 commands['uptime'] = new Command(true,0,"uptime :: Returns uptime of this bot. Any rank.",function() {
     if (STARTTIME) {
         let uptime = secsToLabelTime(Date.now() - STARTTIME, true);
         let sndmsg = "Bot uptime: " + uptime;
-        sendMessage(sndmsg, 1000);
+        sendMessage(sndmsg);
     }
 });
 
