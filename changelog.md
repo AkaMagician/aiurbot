@@ -1,4 +1,7 @@
 - January 22, 2017
+  - 0.3.6 alpha
+    - Changes
+      - Fixed roulette not starting once the initial roulette ends
   - 0.3.5 alpha
     - Changes
       - Default announcementInterval is now 9 minutes (540000ms)
