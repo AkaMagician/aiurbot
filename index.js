@@ -3989,7 +3989,7 @@ commands['jointime'] = new Command(true,2,"jointime [@username|#userID] :: Retur
     } else {
         sndmsg = arguments[1]+" was not found.";
     }
-    sendMessage(sndmsg, 1000);
+    sendMessage(sndmsg);
 });
 
 commands['link'] = new Command(true,0,"link :: Returns the link of the song currently playing. Any rank.",function() {
