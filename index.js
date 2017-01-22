@@ -5,7 +5,7 @@
 *   expandable plug.dj NodeJS bot with some basicBot adaptations (I did not write basicBot!) and then some.
 *   as this is specially for a certain room, some commands are also adapted from the custom basicBot additions github.com/ureadmyname added.
 *   written by zeratul- (https://github.com/zeratul0) specially for https://plug.dj/its-a-trap-and-edm
-*   version 0.3.5
+*   version 0.3.6
 *   ALPHA TESTING
 *   Copyright 2016-2017 zeratul0
 *   You may edit and redistribute this program for your own personal (not commercial) use as long as the author remains credited. Any profit or monetary gain
@@ -54,7 +54,7 @@ const PLATFORM = ((process && process.platform) ? process.platform : "win32");  
 const SC_CLIENT_ID = 'f4fdc0512b7990d11ffc782b2c17e8c2';  //SoundCloud Client ID
 const YT_API_KEY = 'AIzaSyBTqSq0ZhXcGerXRgCKBZSd_BxaM0OZ9g4';  //YouTube API Key
 const TITLE = 'AiurBot';  //bot title
-const VER = '0.3.5 alpha';  //bot version
+const VER = '0.3.6 alpha';  //bot version
 const AUTHOR = 'zeratul0';  //bot author (github)
 const STARTTIME = Date.now();  //the time the bot was started
 const DEBUG = false;  //if true, logs certain internal things (spammy!)
@@ -3320,6 +3320,7 @@ Room.prototype.roulette = {
             }
         }
         sendMessage(msg);
+	startTimer("roulette");
     },
     '_cleanup': function() {
         
