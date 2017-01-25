@@ -1,3 +1,22 @@
+- January 25, 2017
+  - 0.3.7 alpha
+    - Changes
+      - Stuck timer is now 10s, reduced from 30s
+      - Own trigger messages are now deleted
+      - Grabs are now set upon joining a room
+      - User's votes and grabs should now be cleared when they leave
+      - Trim username when comparing in getUser
+      - Changed !gif response to HTTPS instead of HTTP
+      - Removed unnecessary ent.decode(), added more where needed
+      - Delete checks for AFK/autojoin response messages added (autorespond is now disabled!|autojoin was not enabled|autojoin disabled|afk message disabled)
+      - new BotSettings options
+        - chatDeleteResponses: delete afk/autojoin responses
+      - Minimum role for afktime, seentime, jointime, stats set to User (0)
+      - Removed STARTASNORMALUSER logic remaining in its old spot
+      - Changed roulette message a bit to make it stand out
+      - Changed autodisable interval to 63 minutes to try to avoid confliction with roulette messages (autodelete reasons and all that)
+    - Planned
+      - Create a system to split important messages from ones that are meant to be autodeleted to avoid deleting others
 - January 22, 2017
   - 0.3.6 alpha
     - Changes
