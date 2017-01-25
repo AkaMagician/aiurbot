@@ -7,6 +7,7 @@ These are the valid bot settings that can be changed through the "set" chat comm
 |autoWoot                 |`true` \| `false`|If true, automatically woots when a new song is played.
 |welcomeUsers             |`true` \| `false`|If true, welcomes users joining the room.
 |chatDeleteTriggerMessages|`true` \| `false`|If true, deletes messages beginning with the bot\'s trigger.
+|chatDeleteResponses      |`true` \| `false`|If true, deletes responses to !afkdisable and !joindisable.
 |announcementInterval     |`Number` **(MILLISECONDS)**|Amount of time between announcements in MILLISECONDS, must be above 5000. Default is 1200000 (20 minutes). Will restart the timer when this is changed.
 |announcementRandom       |`true` \| `false`|If true, selects random announcements to send. If false, sends them in the order they are listed.
 |sendAnnouncements        |`true` \| `false`|If true, sends announcements.
