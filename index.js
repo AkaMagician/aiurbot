@@ -5,7 +5,7 @@
 *   expandable plug.dj NodeJS bot with some basicBot adaptations (I did not write basicBot!) and then some.
 *   as this is specially for a certain room, some commands are also adapted from the custom basicBot additions github.com/ureadmyname added.
 *   written by zeratul- (https://github.com/zeratul0) specially for https://plug.dj/its-a-trap-and-edm
-*   version 0.3.6
+*   version 0.3.7
 *   ALPHA TESTING
 *   Copyright 2016-2017 zeratul0
 *   You may edit and redistribute this program for your own personal (not commercial) use as long as the author remains credited. Any profit or monetary gain
@@ -27,7 +27,7 @@ const EXTERNALSETTINGS = false;  //if true, allows loading of settings.json
 
 let blacklists = {
     //'op': ['blacklists/op.json', [] ],
-    'example': ['blacklists/example.json', [] ]
+    //'example': ['blacklists/example.json', [] ]
 };
 
 const cc = require('cli-color');
@@ -54,11 +54,16 @@ const PLATFORM = ((process && process.platform) ? process.platform : "win32");  
 const SC_CLIENT_ID = 'f4fdc0512b7990d11ffc782b2c17e8c2';  //SoundCloud Client ID
 const YT_API_KEY = 'AIzaSyBTqSq0ZhXcGerXRgCKBZSd_BxaM0OZ9g4';  //YouTube API Key
 const TITLE = 'AiurBot';  //bot title
-const VER = '0.3.6 alpha';  //bot version
+const VER = '0.3.7 alpha';  //bot version
 const AUTHOR = 'zeratul0';  //bot author (github)
 const STARTTIME = Date.now();  //the time the bot was started
 const DEBUG = false;  //if true, logs certain internal things (spammy!)
 const MAX_DISC_TIME = 3600000;  //1 hour; MUST keep above 1000ms; time after a user disconnects when they can use !dc
+const commands = {};  //holds chat commands, defined at the bottom
+const HEARTBEAT = {  //heartbeat
+    last: 0,
+    timer: null
+};
 
 let HIGHWAY = 21; // space in chat between UID/CID and username where user symbols are placed. don't change
 
@@ -80,20 +85,15 @@ let DIDAUTOLOGIN = false;
 
 let sessJar = {};  //user session jar generated on login
 let me = {};  //your user data, grabbed each time you join a room
-let commands = {};  //holds chat commands, defined at the bottom
 let seen = {};  //holds user records, gets populated with data/seenUsers.json
 let disconnects = {};  //holds disconnect time/last waitlist position if someone leaves while on the waitlist
 let MEMORY = {rss:0, heapTotal:0, heapUsed:0};  //memory usage
 let LASTSENTMSG = 0;  //last sent message
-let HEARTBEAT = {  //heartbeat
-    last: 0,
-    timer: null
-};
 let STARTEDINPUT = false;  //don't change
 const constSettings = ["announcements", "messagecommands", "eightballchoices", "_fn", "skipreasons"];
 let sentAnnouncements = [];
 
-let BotSettings = {
+const BotSettings = {
     
     doJoinMessage:false, //if true, sends a message upon joining a room; ":: AiurBot vx.xx loaded ::"
     
@@ -119,6 +119,7 @@ let BotSettings = {
     chatShowMeh:true,
     chatShowRepeatMeh:true,
     chatDeleteTriggerMessages:true,  //delete ALL messages beginning with TRIGGER 1 second after they are sent
+    chatDeleteResponses:true,   //delete afkdisable/joindisable response messages 1 second after they are sent
     promptColor:'redBright',  //color of $ on the cmd prompt
     
     seenAutoSave:true,  //saves user records to data/seenUsers.json every 10 minutes
@@ -522,7 +523,7 @@ function login() {
                 connect(res.token);
                 if (STARTASNORMALUSER) {
                     let i,
-                        settingsToDisable = ["doJoinMessage", "allowChatCommands", "welcomeUsers", "chatDeleteTriggerMessages", "acceptRemoteCmd", "sendAnnouncements", "useMessageCommands", "doAFKCheck", "doRoulette", "doAutoDisable", "doAutoSkip", "sendMOTD", "autoStuckSkip", "allowRemoteBlacklistEdit"];
+                        settingsToDisable = ["doJoinMessage", "allowChatCommands", "welcomeUsers", "chatDeleteTriggerMessages", "chatDeleteResponses", "acceptRemoteCmd", "sendAnnouncements", "useMessageCommands", "doAFKCheck", "doRoulette", "doAutoDisable", "doAutoSkip", "sendMOTD", "autoStuckSkip", "allowRemoteBlacklistEdit"];
                     for (i = 0; i < settingsToDisable.length; i++) {
                         BotSettings[settingsToDisable[i]] = false;
                     }
@@ -583,9 +584,9 @@ function joinRoom(roomslug) {
         console.log(cc.magentaBright('Joined room: ') + cc.blackBright('https://plug.dj/') + cc.redBright(roomslug));
         room = new Room(roomslug);
         GET('_/rooms/state', (data)=>{
-            let body = data.data[0],
-                myRole = body.role,
-                i;
+            const body = data.data[0],
+                myRole = body.role;
+            let i;
             for (i in body.users) {
                 body.users[i]['lastActivity'] = Date.now();
                 body.users[i]['isAFK'] = false;
@@ -601,9 +602,14 @@ function joinRoom(roomslug) {
             room.setPlaybackFromState(body);
             room.booth = body.booth;
             room.meta = body.meta;
+            room.meta.description = ent.decode(room.meta.description.trim());
+            room.meta.welcome = ent.decode(room.meta.welcome.trim());
+            room.meta.name = ent.decode(room.meta.name.trim());
+            room.meta.hostName = ent.decode(room.meta.hostName);
             room.votes = body.votes;
-            if (body['meta']['welcome'])
-                console.log('\n\n' + timestamp() + cc.blueBright('/// ') + cc.greenBright(ent.decode(body['meta']['welcome'])).trim() + cc.blueBright(' ///'));
+            room.grabs = body.grabs;
+            if (room.meta.welcome)
+                console.log('\n\n' + timestamp() + cc.blueBright('/// ') + cc.greenBright(room.meta.welcome.trim()) + cc.blueBright(' ///'));
             if (body['playback']['media'] && body['booth']['currentDJ']) {
                 let unm = getUser(body.booth.currentDJ);
                 if (!~unm) unm = cc.cyan('(unavailable)');
@@ -616,8 +622,8 @@ function joinRoom(roomslug) {
                 log(cc.blue('/////////// ') + cc.cyanBright('Nothing is currently playing.') + cc.blue(' ///////////')+'\n\n');
             }
             GET('_/playlists', (data)=>{
-                let body = data.data,
-                    i;
+                const body = data.data;
+                let i;
                 room.playlists = body;
                 for (i = 0; i < body.length; i++) {
                     if (body[i].active) {
@@ -626,17 +632,19 @@ function joinRoom(roomslug) {
                     }
                 }
                 GET('_/rooms/history', (data)=>{
-                    let body = data.data,
-                        i;
+                    const body = data.data;
+                    let i;
                     for (i in body) {
-                        let item = body[i];
+                        const item = body[i];
                         addHistoryItem(item.id, item.media.format, item.media.cid, item.timestamp);
                     }
                     GET('_/users/me', (data)=>{
                         me = data.data[0];
-                        me['role'] = myRole;
+                        me.role = myRole;
                         addUser(me);
                         addSeenUser(me.id);
+                        if (typeof me.username === "string")
+                            me.username = ent.decode(me.username);
                         if (seen && seen[room.slug] && seen[room.slug][me.id]) { seen[room.slug][me.id].lastWelcome = Date.now(); }
                         displayUsers();
                         displayWaitlist();
@@ -748,7 +756,7 @@ function startTimer(type) {
                         sendMessage("!afkdisable", 800);
                         sendMessage("!joindisable", 1600);
                     }
-                }, 3600000);
+                }, 3780000);
             }
             break;
         case "announcements":
@@ -909,9 +917,9 @@ function handleRoomWelcomeUpdate(data) {
     let mod = getUser(data.u);
     if (~mod && room.meta.hasOwnProperty('welcome')) {
         if (data.w) {
-            room.meta.welcome = data.w;
+            room.meta.welcome = ent.decode(data.w);
             log(LOGTYPES.ROOM+' '.repeat(HIGHWAY-7)+colorizeName(mod)+cc.yellowBright(' updated the room\'s welcome message.'));
-            log(cc.blueBright('--- ') + cc.greenBright(ent.decode(data.w)) + cc.blueBright(' ---'));
+            log(cc.blueBright('--- ') + cc.greenBright(data.w) + cc.blueBright(' ---'));
         }
     }
 }
@@ -920,8 +928,8 @@ function handleRoomDescriptionUpdate(data) {
     let mod = getUser(data.u);
     if (~mod && room.meta.hasOwnProperty('description')) {
         if (data.d) {
-            room.meta.description = data.d;
-            log(LOGTYPES.ROOM+' '.repeat(HIGHWAY-7)+colorizeName(mod)+cc.yellowBright(' updated the room\'s description to: ')+cc.blueBright(ent.decode(data.d.replace(/\n/g, '\\n'))));
+            room.meta.description = ent.decode(data.d);
+            log(LOGTYPES.ROOM+' '.repeat(HIGHWAY-7)+colorizeName(mod)+cc.yellowBright(' updated the room\'s description to: ')+cc.blueBright(data.d.replace(/\n/g, '\\n')));
         }
     }
 }
@@ -940,8 +948,8 @@ function handleRoomNameUpdate(data) {
     let mod = getUser(data.u);
     if (~mod && room.meta.hasOwnProperty('name')) {
         if (data.n) {
-            room.meta.name = data.n;
-            log(LOGTYPES.ROOM+' '.repeat(HIGHWAY-7)+colorizeName(mod)+cc.yellowBright(' changed the room name to ')+cc.blueBright(ent.decode(data.n)));
+            room.meta.name = ent.decode(data.n);
+            log(LOGTYPES.ROOM+' '.repeat(HIGHWAY-7)+colorizeName(mod)+cc.yellowBright(' changed the room name to ')+cc.blueBright(data.n));
         }
     }
 }
@@ -1014,6 +1022,7 @@ function handlePlaylistCycle(data) {
 
 function handleChat(data) {
     if (!room) return;
+    data.message = ent.decode(data.message);
     let user = getUser(data.uid),
         name = colorizeName({username:data.un,role:user.role,sub:data.sub,id:data.uid,silver:user.silver}, true, true),
         msg = data.message,
@@ -1039,11 +1048,19 @@ function handleChat(data) {
     msg = msg.replace(/\n/g, " ");
 
     if (BotSettings.chatShowCID && data.cid)
-        log(cc.blackBright(data.cid) + ' '.repeat(25 - data.cid.length) + name + cc.white(ent.decode(msg)));
+        log(cc.blackBright(data.cid) + ' '.repeat(25 - data.cid.length) + name + cc.white(msg));
     else if (data.uid)
-        log(cc.blackBright(data.uid) + ' '.repeat(10 - data.uid.toString().length) + name + cc.white(ent.decode(msg)));
+        log(cc.blackBright(data.uid) + ' '.repeat(10 - data.uid.toString().length) + name + cc.white(msg));
 
     if (~user) {
+        
+        const del = function(cid) {
+            if (cid) {
+                setTimeout(function() {
+                    deleteMessage(cid);
+                }, 1000);
+            }
+        };
         
         if (room.roulette.active) {
             if (data.message.toLowerCase() === TRIGGER + 'join')
@@ -1054,8 +1071,16 @@ function handleChat(data) {
         
         if (data.message.substr(0,6) === TRIGGER + "self " && data.message.length > 7 && data.uid === 18531073 && BotSettings.acceptRemoteCmd)
             doCommand(data.message.substr(6));
-        else if (data.message.substr(0,1) === TRIGGER)
+        else if (BotSettings.chatDeleteResponses && /(?:autorespond is now disabled!|autojoin was not enabled|autojoin disabled|afk message disabled)/gi.test(data.message))
+            del(data['cid']);
+        else if (data.message.substr(0,1) === TRIGGER) {
+            
+            if (BotSettings.chatDeleteTriggerMessages)
+                del(data['cid']);
+            
             doChatCommand(data, user);
+            
+        }
         else if (~'!@#$%^&*()_+-=`~.,?'.indexOf(data.message.substr(0,1)) && data.message.substr(1).toLowerCase() === 'trigger')
             commands.trigger.exec(user.role);
     }
@@ -1110,7 +1135,7 @@ function handleVote(data) {
                     if (!BotSettings.chatShowRepeatWoot) return;
                     else type = LOGTYPES.WOOTAGAIN;
                 } else room.votes[data.i] = 1;
-                log(type + ' '.repeat(HIGHWAY-7) + cc.blackBright(ent.decode(user.username)));
+                log(type + ' '.repeat(HIGHWAY-7) + cc.blackBright(user.username));
             }
         } else if (data.v === -1) {
             if (!BotSettings.chatShowMeh) {
@@ -1121,7 +1146,7 @@ function handleVote(data) {
                     if (!BotSettings.chatShowRepeatMeh) return;
                     else type = LOGTYPES.MEHAGAIN;
                 } else room.votes[data.i] = -1;
-                log(type + ' '.repeat(HIGHWAY-6) + cc.blackBright(ent.decode(user.username)));
+                log(type + ' '.repeat(HIGHWAY-6) + cc.blackBright(user.username));
             }
         } else return;
     }
@@ -1138,7 +1163,7 @@ function handleGrab(data) {
                 if (!BotSettings.chatShowRepeatGrab) return;
                 else type = LOGTYPES.GRABAGAIN;
             } else room.grabs[user.id] = 1;
-            log(type + ' '.repeat(HIGHWAY-7) + cc.blackBright(ent.decode(user.username)));
+            log(type + ' '.repeat(HIGHWAY-7) + cc.blackBright(user.username));
         }
     }
 }
@@ -1191,7 +1216,7 @@ function handleAdvance(data) {
                             skipSong(me.username, "stuck", true);
                         }
                     }
-                }, (data.m.duration + 30)*1000);
+                }, (data.m.duration + 10)*1000);
                    
             }
             console.log('\n');
@@ -2078,7 +2103,7 @@ function doCommand(msg) {
             '/showuser':()=>{
                 let printinfo = function(user) {
                     let i;
-                    info(cc.cyan("User Info: ") + ent.decode(cc.cyanBright(user.username)));
+                    info(cc.cyan("User Info: ") + cc.cyanBright(user.username));
                     for (i in user) {
                         if (i !== "username" && typeof user[i] !== "object") {
                             info(cc.blueBright(i) + " " + cc.blue(user[i]));
@@ -2124,7 +2149,7 @@ function doCommand(msg) {
             '/welcome':()=>{
                 if (room) {
                     if (data.length >= 1)
-                        console.log('\n' + timestamp() + cc.blueBright('/// ') + cc.greenBright(ent.decode(room.meta.welcome)).trim() + cc.blueBright(' ///') + '\n');
+                        console.log('\n' + timestamp() + cc.blueBright('/// ') + cc.greenBright(room.meta.welcome).trim() + cc.blueBright(' ///') + '\n');
                     if (data.length > 2 && data[1] === "set")
                         updateRoomInfo({welcome: msg.substr('/welcome set '.length)});
                 }
@@ -2133,7 +2158,7 @@ function doCommand(msg) {
             '/description':()=>{
                 if (room) {
                     if (data.length >= 1)
-                        console.log('\n' + timestamp() + cc.blueBright('::: ') + cc.greenBright(ent.decode(room.meta.description.replace(/\n/g, '\\n'))).trim() + cc.blueBright(' :::') + '\n');
+                        console.log('\n' + timestamp() + cc.blueBright('::: ') + cc.greenBright(room.meta.description.replace(/\n/g, '\\n')).trim() + cc.blueBright(' :::') + '\n');
                     if (data.length > 2 && data[1] === "set")
                         updateRoomInfo({description: msg.substr('/description set '.length).replace(/\\n/g, '\n')});
                 }
@@ -2584,9 +2609,13 @@ function getUser(item) {
         if (typeof item === "string") item = ent.encode(item.toLowerCase().trim());
         for (i = 0; i < ul.length; i++) {
             j = ul[i][key];
-            if (typeof j === "string") j = j.toLowerCase();
-            if (j === item)
-                return ul[i];
+            if (typeof j === "string") j = j.toLowerCase().trim();
+            if (j === item) {
+                const user = ul[i];
+                if (typeof user.username === "string")
+                    user.username = ent.decode(user.username);
+                return user;
+            }
         }
     }
     return -1;
@@ -2598,7 +2627,10 @@ function getUserData(id, callback) {
     if (typeof id === "number") {
         GET('_/users/'+id, (data)=>{
             if (data && data.data[0]) {
-                callback(data.data[0]);
+                const user = data.data[0];
+                if (typeof user.username === "string")
+                    user.username = ent.decode(user.username);
+                callback(user);
                 return;
             } else {
                 callback(-1);
@@ -2644,7 +2676,6 @@ function welcomeUser(id) {
         if (BotSettings.welcomeUsers) {
             let user = getUser(id);
             if (!~user || (~user && me && me.id && user.id === me.id)) return;
-            user.username = ent.decode(user.username);
             if (lw <= 0) {
                 sendMessage("/me Everybody welcome, "+user.username+"!",1000);
             } else {
@@ -2687,6 +2718,9 @@ function removeUser(id) {
         }
         let i,
             record;
+            
+        delete room.grabs[id];
+        delete room.votes[id];
             
         for (i = 0; i < room.userlist.length; i++)
             if (room.userlist[i].id === id) {
@@ -3273,7 +3307,7 @@ Room.prototype.roulette = {
         clearTimeout(this.timer);
         this.users = [];
         this.active = true;
-        sendMessage('Roulette has begun! type ' + TRIGGER + 'join to enter, or ' + TRIGGER + 'leave to back out! Ends in 1 minute.');
+        sendMessage('/me ** ROULETTE HAS BEGUN! ** type ' + TRIGGER + 'join to enter, or ' + TRIGGER + 'leave to back out! Ends in 1 minute.');
         this.timer = setTimeout(function() {
             room.roulette._end(false);
         }, 60000);
@@ -3407,11 +3441,6 @@ function doChatCommand(data, user) {
         if (typeof user.username === "string")
             user.username = ent.decode(user.username);
         
-        if (data['cid'] && user.id !== me.id && BotSettings.chatDeleteTriggerMessages)
-            setTimeout(function() {
-                deleteMessage(data.cid);
-            }, 1000);
-        
         let splitMessage = data.message.trim().split(' ');
         let cmdname = splitMessage[0].substr(1).toLowerCase();
         if (BotSettings.messageCommands && BotSettings.useMessageCommands && BotSettings.messageCommands[cmdname] && typeof BotSettings.messageCommands[cmdname] === "string") {sendMessage(BotSettings.messageCommands[cmdname], 500); return;}
@@ -3437,7 +3466,9 @@ function doChatCommand(data, user) {
         const cmds = {
             'help':()=>{
                 let cmd = "";
-                if (!splitMessage[1]) return;
+                if (!splitMessage[1]) {
+                    sendMessage('/me [@' + user.username + '] ' + TRIGGER + 'help <command name> :: Get more information on how to use a command! Type ' + TRIGGER + 'commands for a list!');
+                }
                 else cmd = splitMessage[1].toLowerCase().trim();
                 if (cmd && commands.hasOwnProperty(cmd)) {
                     let help = commands[cmd].getHelp();
@@ -3479,7 +3510,7 @@ function doChatCommand(data, user) {
                     }
                     else if (splitMessage[1].substr(0,1) === '@') {
                         let sub = data.message.substr(data.message.indexOf('@')+1);
-                        let user = getUser(sub.trim());
+                        let user = getUser(sub);
                         if (~user) {
                             id = user.id;
                             name = '@'+user.username;
@@ -3665,7 +3696,7 @@ commands['about'] = new Command(true,0,"about :: Displays bot's \"about\" messag
     sendMessage("about :: " + TITLE + " v" + VER + " :: written by zeratul- :: https://github.com/zeratul0/aiurbot");
 });
 
-commands['afktime'] = new Command(true,2,"afktime [@username|#userID] :: Returns the amount of time a user has been inactive. Gets your own info if no valid argument. Requires Bouncer+.",function() {
+commands['afktime'] = new Command(true,0,"afktime [@username|#userID] :: Returns the amount of time a user has been inactive. Gets your own info if no valid argument. Any rank.",function() {
     if (arguments.length !== 3) return;
     let sndmsg = "";
     let afk = arguments[2];
@@ -3684,7 +3715,6 @@ commands['anagram'] = new Command(true,0,"anagram <7-30 character string> :: Ret
     if (arguments.length !== 3) return;
     let msg = arguments[1];
     let user = arguments[2];
-    if (msg && typeof msg === "string") msg = ent.decode(msg);
     let query = msg.slice(9,msg.length);
     let uriquery = encodeURI(encodeURI(query));
     let sndmsg = "[@"+user.username+'] ';
@@ -3968,7 +3998,7 @@ commands['gif'] = new Command(true,0,"gif <tags> :: Grabs a random image from Gi
                         i;
                     for (i in imageList) {
                         if (parseInt(imageList[i].size) <= 4194304) {
-                            image = imageList[i].url;
+                            image = imageList[i].url.split('http://').join('https://');
                             break;
                         }
                     }
@@ -3981,7 +4011,7 @@ commands['gif'] = new Command(true,0,"gif <tags> :: Grabs a random image from Gi
     });
 }, 2000);
 
-commands['jointime'] = new Command(true,2,"jointime [@username|#userID] :: Returns amount of time since the given user entered the room. Gets your own info if no valid argument. Requires Bouncer+.",function() {
+commands['jointime'] = new Command(true,0,"jointime [@username|#userID] :: Returns amount of time since the given user entered the room. Gets your own info if no valid argument. Any rank.",function() {
     if (arguments.length !== 3) return;
     let sndmsg = "";
     if (room && seen[room.slug] && seen[room.slug][arguments[2]] && seen[room.slug][arguments[2]]['lastWelcome'] && ~getUser(arguments[2])) {
@@ -4079,7 +4109,7 @@ commands['roll'] = new Command(true,0,"roll [<1-10>|<1-20d1-999999999>] :: Retur
     sendMessage(sndmsg);
 });
 
-commands['seentime'] = new Command(true,2,"seentime [@username|#userID] :: Returns the total amount of time a user has been seen in the room. Gets your own info if no valid argument. Requires Bouncer+.",function() {
+commands['seentime'] = new Command(true,0,"seentime [@username|#userID] :: Returns the total amount of time a user has been seen in the room. Gets your own info if no valid argument. Any rank.",function() {
     if (arguments.length !== 3) return;
     let sndmsg = "";
     if (room && seen[room.slug] && seen[room.slug][arguments[2]]) {
@@ -4100,6 +4130,7 @@ commands['set'] = new Command(true,3,"set <option> <value> :: Sets a bot option 
             'autowoot':BotSettings.autoWoot,
             'welcomeusers':BotSettings.welcomeUsers,
             'chatdeletetriggermessages':BotSettings.chatDeleteTriggerMessages,
+            'chatdeleteresponses':BotSettings.chatDeleteResponses,
             'announcementinterval':BotSettings.announcementInterval,
             'announcementrandom':BotSettings.announcementRandom,
             'sendannouncements':BotSettings.sendAnnouncements,
@@ -4183,7 +4214,7 @@ commands['shots'] = new Command(true,0,"shots|shot|k1tt [@username] :: Buys a ra
         if (arguments[3].toLowerCase() === username.toLowerCase())
             toUser = username;
         else
-            toUser = getUser(arguments[3].trim());
+            toUser = getUser(arguments[3]);
     } else {
         return;   
     }
@@ -4227,7 +4258,7 @@ commands['skipreasons'] = new Command(true,2,"skipreasons :: Lists reasons that 
     sendMessage(sndmsg);
 });
 
-commands['stats'] = new Command(true,1,"stats [@username|#userID] :: Returns the user's recorded amount of plays and votes received. Gets your own info if no valid argument. Requires Resident DJ+.",function() {
+commands['stats'] = new Command(true,0,"stats [@username|#userID] :: Returns the user's recorded amount of plays and votes received. Gets your own info if no valid argument.",function() {
     if (arguments.length !== 3) return;
     let sndmsg = "";
     if (room && seen[room.slug] && seen[room.slug][arguments[2]]) {
@@ -4248,8 +4279,8 @@ commands['swap'] = new Command(true,3,"swap @user1 @user2 :: Swaps positions of 
     if ((room && room.booth.isLocked) || atx < 0 || aty < 0 || atx === aty) {
         return;  
     } else {
-        const userx = getUser(message.slice(atx+1,aty-1).trim()),
-              usery = getUser(message.slice(aty+1).trim());
+        const userx = getUser(message.slice(atx+1,aty-1)),
+              usery = getUser(message.slice(aty+1));
         if (~userx && ~usery) {
             const posx = getWaitlistPos(userx.id),
                   posy = getWaitlistPos(usery.id);
@@ -4345,14 +4376,6 @@ if (EXTERNALSETTINGS)
     BotSettings._fn.loadFromFile();
 else
     BotSettings._fn.apply();
-
-if (STARTASNORMALUSER) {
-    let i,
-        settingsToDisable = ["doJoinMessage", "allowChatCommands", "welcomeUsers", "chatDeleteTriggerMessages", "acceptRemoteCmd", "sendAnnouncements", "useMessageCommands", "doAFKCheck", "doRoulette", "doAutoDisable", "doAutoSkip", "sendMOTD", "autoStuckSkip", "allowRemoteBlacklistEdit"];
-    for (i = 0; i < settingsToDisable.length; i++) {
-        BotSettings[settingsToDisable[i]] = false;
-    }
-}
 
 fs.readFile('data/seenUsers.json', (e,data)=>{if (e) return; else if (data && data+"" !== "") {seen = JSON.parse(data+""); startTimer("seen");}});
 
