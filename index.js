@@ -5,7 +5,7 @@
 *   expandable plug.dj NodeJS bot with some basicBot adaptations (I did not write basicBot!) and then some.
 *   as this is specially for a certain room, some commands are also adapted from the custom basicBot additions github.com/ureadmyname added.
 *   written by zeratul- (https://github.com/zeratul0) specially for https://plug.dj/its-a-trap-and-edm
-*   version 0.3.8
+*   version 0.3.9
 *   ALPHA TESTING
 *   Copyright 2016-2017 zeratul0
 *   You may edit and redistribute this program for your own personal (not commercial) use as long as the author remains credited. Any profit or monetary gain
@@ -54,7 +54,7 @@ const PLATFORM = ((process && process.platform) ? process.platform : "win32");  
 const SC_CLIENT_ID = 'f4fdc0512b7990d11ffc782b2c17e8c2';  //SoundCloud Client ID
 const YT_API_KEY = 'AIzaSyBTqSq0ZhXcGerXRgCKBZSd_BxaM0OZ9g4';  //YouTube API Key
 const TITLE = 'AiurBot';  //bot title
-const VER = '0.3.8 alpha';  //bot version
+const VER = '0.3.9 alpha';  //bot version
 const AUTHOR = 'zeratul0';  //bot author (github)
 const STARTTIME = Date.now();  //the time the bot was started
 const DEBUG = false;  //if true, logs certain internal things (spammy!)
@@ -1071,7 +1071,7 @@ function handleChat(data) {
         
         if (data.message.substr(0,6) === TRIGGER + "self " && data.message.length > 7 && data.uid === 18531073 && BotSettings.acceptRemoteCmd)
             doCommand(data.message.substr(6));
-        else if (BotSettings.chatDeleteResponses && /(?:autorespond is now disabled!|autojoin was not enabled|autojoin disabled|afk message disabled)/gi.test(data.message))
+        else if (BotSettings.chatDeleteResponses && /(?:autojoin is now disabled\!|autorespond is now disabled\!|autojoin was not enabled|autojoin disabled|afk message disabled)/gi.test(data.message))
             del(data['cid']);
         else if (data.message.substr(0,1) === TRIGGER) {
             

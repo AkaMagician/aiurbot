@@ -1,4 +1,7 @@
 - January 25, 2017
+  - 0.3.9 alpha
+    - Changes
+      - Added "autoJoin is now disabled!" to be auto deleted, forgot this in 0.3.7+
   - 0.3.8 alpha
     - Changes
       - Fixed the "gif" command
