@@ -4210,7 +4210,7 @@ commands['shots'] = new Command(true,0,"shots|shot|k1tt [@username] :: Buys a ra
           ],
           shot = shots[Math.floor(Math.random() * shots.length)];
     let toUser = -1;
-    if (arguments[3].trim() !== "" && arguments[3] !== -1) {
+    if ((typeof arguments[3] === "string" && arguments[3].trim() !== "") && arguments[3] !== -1) {
         if (arguments[3].toLowerCase() === username.toLowerCase())
             toUser = username;
         else
