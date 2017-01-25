@@ -18,6 +18,7 @@
     "chatShowMeh": true,
     "chatShowRepeatMeh": true,
     "chatDeleteTriggerMessages": true,
+    "chatDeleteResponses":true,
     "promptColor": "redBright",
     "seenAutoSave": true,
     "acceptRemoteCmd": true,
@@ -44,7 +45,7 @@
     },
     "skipReasons": {
         "theme":"this song does not fit the room theme.",
-        "op":"this song is on the OP blacklist. List of OP song IDs: http://pastebin.com/FMD6Nby2 and their names: http://git.io/vOTmj",
+        "op":"this song is on the OP blacklist.",
         "blacklisted":"this song was found on a blacklist.",
         "history":"this song is already in the room's song history.",
         "mix":"you played a mix, which is against the rules.",

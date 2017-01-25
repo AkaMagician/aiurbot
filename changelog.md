@@ -1,4 +1,8 @@
 - January 25, 2017
+  - 0.3.8 alpha
+    - Changes
+      - Fixed the "gif" command
+      - 8ball now retains the user's question
   - 0.3.7 alpha
     - Changes
       - Stuck timer is now 10s, reduced from 30s
