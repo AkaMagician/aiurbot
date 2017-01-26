@@ -1,4 +1,8 @@
 - January 26, 2017
+  - 0.4.2 alpha
+    - Changes
+      - !skip and autoskip (except stuck skip) now bumps the skipped user back up to 1
+      - skipSong now has a fourth parameter (boolean) which moves the skipped user back up to 1 if true
   - 0.4.1 alpha
     - Changes
       - Fixed issue where unavailable songs would not be autoskipped
