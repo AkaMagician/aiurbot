@@ -5,7 +5,7 @@
 *   expandable plug.dj NodeJS bot with some basicBot adaptations (I did not write basicBot!) and then some.
 *   as this is specially for a certain room, some commands are also adapted from the custom basicBot additions github.com/ureadmyname added.
 *   written by zeratul- (https://github.com/zeratul0) specially for https://plug.dj/its-a-trap-and-edm
-*   version 0.3.9
+*   version 0.4.0
 *   ALPHA TESTING
 *   Copyright 2016-2017 zeratul0
 *   You may edit and redistribute this program for your own personal (not commercial) use as long as the author remains credited. Any profit or monetary gain
@@ -16,19 +16,6 @@
 *
 *   Referred to https://github.com/SooYou/plugged for endpoint info, and stackoverflow for help with creating a working CLI input
 */
-
-const HOME = '-8299715266665171479';  //home room's roomslug
-
-const STARTASNORMALUSER = false;  //if true, starts bot with all commands and automatic moderation disabled
-const EXTERNALSETTINGS = false;  //if true, allows loading of settings.json
-
-//list of blacklists
-//  'blacklistName' : ['blacklists/name_of_file.json', [empty array to populate]],
-
-let blacklists = {
-    //'op': ['blacklists/op.json', [] ],
-    //'example': ['blacklists/example.json', [] ]
-};
 
 const cc = require('cli-color');
 const fs = require('graceful-fs');
@@ -49,15 +36,22 @@ const userdata = function() {
     }
     return null;
 };
+const core = require('./coreOptions.js');
+
+const HOME = core.HOME;
+const STARTASNORMALUSER = core.STARTASNORMALUSER;
+const EXTERNALSETTINGS = core.EXTERNALSETTINGS;
+const blacklists = core.blacklists;
+const DEBUG = core.DEBUG;
+let TRIGGER = core.TRIGGER;
 
 const PLATFORM = ((process && process.platform) ? process.platform : "win32");  //host platform OS identifier string
 const SC_CLIENT_ID = 'f4fdc0512b7990d11ffc782b2c17e8c2';  //SoundCloud Client ID
 const YT_API_KEY = 'AIzaSyBTqSq0ZhXcGerXRgCKBZSd_BxaM0OZ9g4';  //YouTube API Key
 const TITLE = 'AiurBot';  //bot title
-const VER = '0.3.9 alpha';  //bot version
+const VER = '0.4.0 alpha';  //bot version
 const AUTHOR = 'zeratul0';  //bot author (github)
 const STARTTIME = Date.now();  //the time the bot was started
-const DEBUG = false;  //if true, logs certain internal things (spammy!)
 const MAX_DISC_TIME = 3600000;  //1 hour; MUST keep above 1000ms; time after a user disconnects when they can use !dc
 const commands = {};  //holds chat commands, defined at the bottom
 const HEARTBEAT = {  //heartbeat
@@ -66,9 +60,6 @@ const HEARTBEAT = {  //heartbeat
 };
 
 let HIGHWAY = 21; // space in chat between UID/CID and username where user symbols are placed. don't change
-
-let TRIGGER = '!';  //bot's trigger char, all chat messages must start with this (excluding the "trigger" command). This is reverted
-//to "!" in case it becomes invalid; see validateTrigger(). Can only be one of these characters: ! @ # $ % ^ & * ( ) _ + - = ` ~ . , ?
 
 //*TIME: timers
 let MEMORYTIME = null;
@@ -508,9 +499,9 @@ let rl = readline.createInterface({
 function login() {
     
     if (!HOME || HOME.trim() === '') {
-        return console.log('\n' + cc.redBright("HOME is not defined! You must specify a roomslug for HOME within index.js, which is the room joined upon logging in. A roomslug is what's found at the end of a plug.dj room's URL."));
+        return console.log('\n' + cc.redBright("HOME is not defined! You must specify a roomslug for HOME within coreOptions.js, which is the room joined upon logging in. A roomslug is what's found at the end of a plug.dj room's URL.\nPress CTRL+C or close the window to exit."));
     } else if (HOME === '-8299715266665171479') {
-        console.log('\n' + cc.yellowBright("HOME is set to -8299715266665171479, the default placeholder room. Change it within index.js to set the default room the bot joins upon logging in."));
+        console.log('\n' + cc.yellowBright("HOME is set to -8299715266665171479, the default placeholder room. Change it within coreOptions.js to set the default room the bot joins upon logging in."));
     }
     
     const pluglogin = function(u,p,isAuto) {
@@ -711,12 +702,16 @@ function startTimer(type) {
                         clearInterval(SAVESEENTIME);
                     } else {
                         activeChecks();
-                        fs.writeFile('data/seenUsers.json', JSON.stringify(seen), (e)=>{
-                            if (e)
-                                error(cc.red(e));
-                            else
-                                nodeLog(cc.blueBright('data/seenUsers.json saved'));
-                        });
+                        if (seen && seen !== {}) {
+                            fs.writeFile('data/seenUsers.json', JSON.stringify(seen), (e)=>{
+                                if (e)
+                                    error(cc.red(e));
+                                else
+                                    nodeLog(cc.blueBright('data/seenUsers.json saved'));
+                            });
+                        } else {
+                            error(cc.red("Seen user records were not saved because they are empty."));
+                        }
                     }
                 }, 600000);
             }
@@ -2093,7 +2088,10 @@ function doCommand(msg) {
             
             '/saveseen':()=>{
                 activeChecks();
-                fs.writeFile('data/seenUsers.json', JSON.stringify(seen), (e)=>{if (e) error(cc.red(e)); else nodeLog(cc.green('data/seenUsers.json saved'))});
+                if (seen && seen !== {})
+                    fs.writeFile('data/seenUsers.json', JSON.stringify(seen), (e)=>{if (e) error(cc.red(e)); else nodeLog(cc.green('data/seenUsers.json saved'))});
+                else
+                    error(cc.red("Seen user records were not saved because they are empty."));
             },
             
             '/listsettings':()=>{
@@ -2496,11 +2494,13 @@ function isUnavailable(format, cid, cb) {
             if (e) error(cc.red(e));
             else if (b && url !== "" && compare !== null && r.statusMessage === "OK") {
                 if (compare(b))
-                    cb(1);
+                    return cb(1);
                 else
-                    cb(0);
+                    return cb(0);
             } else {
-                cb(-1);
+                if (r && r.statusCode === 404)
+                    return cb(1);
+                return cb(-1);
             }
         });
     }
@@ -3245,7 +3245,7 @@ function roleToString(role) {
 //do something when app is closing
 process.on('exit', function(num) {
     activeChecks();
-    fs.writeFileSync('data/seenUsers.json', JSON.stringify(seen));
+    if (seen && seen !== {}) fs.writeFileSync('data/seenUsers.json', JSON.stringify(seen));
     if (wss) wss.close(1000, 'exiting');
     process.exit(num);
 });

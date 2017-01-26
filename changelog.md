@@ -1,4 +1,9 @@
 - January 25, 2017
+  - 0.4.0 alpha
+    - Changes
+      - Separated some variables from index.js into a new file called coreOptions.js. If you do not have coreOptions.js, download it from the git repo and place it in the root folder along with index.js, then use a text editor to change the settings. This should make it a tiny bit more convenient to replace index.js when there is an update.
+      - Seen user data will not save if the seen object is empty or null.
+      - A soundcloud track will now be considered unavailable and autoskipped if the API response status code is 404.
   - 0.3.9 alpha
     - Changes
       - Added "autoJoin is now disabled!" to be auto deleted, forgot this in 0.3.7+
