@@ -16,4 +16,4 @@ There are probably other ways to get it, but you'll want to look for a link such
 where # is the ID you are looking for.
 
 Once you make a blacklist file, you must then add it to the "blacklists" object
-with a text editor inside index.js. An example entry should already exist there.
+with a text editor inside coreOptions.js. An example entry should already exist there.
