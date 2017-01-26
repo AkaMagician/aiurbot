@@ -5,7 +5,7 @@
 *   expandable plug.dj NodeJS bot with some basicBot adaptations (I did not write basicBot!) and then some.
 *   as this is specially for a certain room, some commands are also adapted from the custom basicBot additions github.com/ureadmyname added.
 *   written by zeratul- (https://github.com/zeratul0) specially for https://plug.dj/its-a-trap-and-edm
-*   version 0.4.0
+*   version 0.4.1
 *   ALPHA TESTING
 *   Copyright 2016-2017 zeratul0
 *   You may edit and redistribute this program for your own personal (not commercial) use as long as the author remains credited. Any profit or monetary gain
@@ -49,7 +49,7 @@ const PLATFORM = ((process && process.platform) ? process.platform : "win32");  
 const SC_CLIENT_ID = 'f4fdc0512b7990d11ffc782b2c17e8c2';  //SoundCloud Client ID
 const YT_API_KEY = 'AIzaSyBTqSq0ZhXcGerXRgCKBZSd_BxaM0OZ9g4';  //YouTube API Key
 const TITLE = 'AiurBot';  //bot title
-const VER = '0.4.0 alpha';  //bot version
+const VER = '0.4.1 alpha';  //bot version
 const AUTHOR = 'zeratul0';  //bot author (github)
 const STARTTIME = Date.now();  //the time the bot was started
 const MAX_DISC_TIME = 3600000;  //1 hour; MUST keep above 1000ms; time after a user disconnects when they can use !dc
@@ -1255,6 +1255,31 @@ function handleAdvance(data) {
                     DOSKIP = true;
                     REASON = "history";
                 }
+                
+                const SKIP = function() {
+                    if (DOSKIP && REASON && BotSettings.doAutoSkip && me.role >= 2) {
+                        if (REASON !== "unavailable" && BotSettings.hostBypassAutoSkip && un.role === 5) {}
+                        else {
+                            let current = data.m.format + ":" + data.m.cid;
+                            let dj = data.c;
+                            setTimeout(()=>{
+                                if (BotSettings.doAutoSkip && room && me.role >= 2) {
+                                    let pb = room.playback.m;
+                                    let currentDJ = room.booth.currentDJ;
+                                    if (pb.format && pb.cid && (pb.format + ":" + pb.cid) === current && dj === currentDJ) {
+                                        skipSong(me.username, REASON, true);
+                                        setTimeout(function() {
+                                            addUserToWaitlist(dj, function() {
+                                                moveDJ(dj, 0);
+                                            });
+                                        }, 2000);
+                                    }
+                                }
+                            }, 2000);
+                        }
+                    }
+                };
+                
                 if (!DOSKIP) {
                         isUnavailable(data.m.format, data.m.cid, (state)=> {
                             if (state === -1) {
@@ -1263,34 +1288,17 @@ function handleAdvance(data) {
                                 warn(cc.yellow("This song is unavailable."));
                                 DOSKIP = true;
                                 REASON = "unavailable";
+                                SKIP();
                             } else if (state === 0 && !DOSKIP) {
                                 //noop for now. continue nesting here...
                             } else {
                                 error(cc.red("Unknown code when checking availability: " + cc.redBright(state)));
                             }
                         });
+                } else {
+                    SKIP();
                 }
-                if (DOSKIP && REASON && BotSettings.doAutoSkip && me.role >= 2) {
-                    if (REASON !== "unavailable" && BotSettings.hostBypassAutoSkip && un.role === 5) {}
-                    else {
-                        let current = data.m.format + ":" + data.m.cid;
-                        let dj = data.c;
-                        setTimeout(()=>{
-                            if (BotSettings.doAutoSkip && room && me.role >= 2) {
-                                let pb = room.playback.m;
-                                let currentDJ = room.booth.currentDJ;
-                                if (pb.format && pb.cid && (pb.format + ":" + pb.cid) === current && dj === currentDJ) {
-                                    skipSong(me.username, REASON, true);
-                                    setTimeout(function() {
-                                        addUserToWaitlist(dj, function() {
-                                            moveDJ(dj, 0);
-                                        });
-                                    }, 2000);
-                                }
-                            }
-                        }, 2000);
-                    }
-                }
+
             }
             addHistoryItem(data.h, data.m.format, data.m.cid, data.t);
         } else {
@@ -2497,11 +2505,10 @@ function isUnavailable(format, cid, cb) {
                     return cb(1);
                 else
                     return cb(0);
-            } else {
-                if (r && r.statusCode === 404)
+            } else if (r && r.statusCode === 404)
                     return cb(1);
-                return cb(-1);
-            }
+                
+            return cb(-1);
         });
     }
 }

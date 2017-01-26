@@ -1,3 +1,7 @@
+- January 26, 2017
+  - 0.4.1 alpha
+    - Changes
+      - Fixed issue where unavailable songs would not be autoskipped
 - January 25, 2017
   - 0.4.0 alpha
     - Changes
