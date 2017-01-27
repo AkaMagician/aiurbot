@@ -1,3 +1,7 @@
+- January 27, 2017
+  - 0.4.3 alpha
+    - Changes
+      - For some reason, forgot to add check for the new 4th paramater... fixed
 - January 26, 2017
   - 0.4.2 alpha
     - Changes
