@@ -1,3 +1,16 @@
+- February 2, 2017
+  - 0.4.4 alpha
+    - Changes
+      - removed cooldowns from !blacklist and !blacklists
+      - changed the internals of !roll a tiny bit
+      - altered !cookie, !shots, !candy
+      - added !dclookup command and !kick command
+      - kickUser now does nothing if the target's role is >= the bot's role
+      - dc now correctly keeps track of the time when a user disconnects
+      - strIsNum will now recognize negatives as numbers
+      - @ is now an invalid trigger character
+      - if a roulette is active, welcome messages will inform users as they join the room
+      - message sent when a blacklisted song is skipped will now include the internal name of the blacklist (if it is not op)
 - January 27, 2017
   - 0.4.3 alpha
     - Changes

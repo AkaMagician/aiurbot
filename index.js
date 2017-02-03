@@ -5,7 +5,7 @@
 *   expandable plug.dj NodeJS bot with some basicBot adaptations (I did not write basicBot!) and then some.
 *   as this is specially for a certain room, some commands are also adapted from the custom basicBot additions github.com/ureadmyname added.
 *   written by zeratul- (https://github.com/zeratul0) specially for https://plug.dj/its-a-trap-and-edm
-*   version 0.4.3
+*   version 0.4.4
 *   ALPHA TESTING
 *   Copyright 2016-2017 zeratul0
 *   You may edit and redistribute this program for your own personal (not commercial) use as long as the author remains credited. Any profit or monetary gain
@@ -49,7 +49,7 @@ const PLATFORM = ((process && process.platform) ? process.platform : "win32");  
 const SC_CLIENT_ID = 'f4fdc0512b7990d11ffc782b2c17e8c2';  //SoundCloud Client ID
 const YT_API_KEY = 'AIzaSyBTqSq0ZhXcGerXRgCKBZSd_BxaM0OZ9g4';  //YouTube API Key
 const TITLE = 'AiurBot';  //bot title
-const VER = '0.4.3 alpha';  //bot version
+const VER = '0.4.4 alpha';  //bot version
 const AUTHOR = 'zeratul0';  //bot author (github)
 const STARTTIME = Date.now();  //the time the bot was started
 const MAX_DISC_TIME = 3600000;  //1 hour; MUST keep above 1000ms; time after a user disconnects when they can use !dc
@@ -371,7 +371,7 @@ const DURATIONS = [
 ];
 
 function validateTrigger() {
-    if (typeof TRIGGER !== "string" || TRIGGER.length !== 1 || !~'!@#$%^&*()_+-=`~.,?'.indexOf(TRIGGER)) {
+    if (typeof TRIGGER !== "string" || TRIGGER.length !== 1 || !~'!#$%^&*()_+-=`~.,?'.indexOf(TRIGGER)) {
         TRIGGER = '!';
         error(cc.red("Invalid trigger found. Reverted trigger to ") + cc.redBright("!"));
     }
@@ -1076,7 +1076,7 @@ function handleChat(data) {
             doChatCommand(data, user);
             
         }
-        else if (~'!@#$%^&*()_+-=`~.,?'.indexOf(data.message.substr(0,1)) && data.message.substr(1).toLowerCase() === 'trigger')
+        else if (~'!#$%^&*()_+-=`~.,?'.indexOf(data.message.substr(0,1)) && data.message.substr(1).toLowerCase() === 'trigger')
             commands.trigger.exec(user.role);
     }
 }
@@ -1475,9 +1475,14 @@ function getUserDC(uid) {
 
 function setUserDC(uid, pos) {
     pos = parseInt(pos);
-    if (!isNaN(pos) && pos > -1)
-        disconnects[uid] = [pos, Date.now()];
-    else
+    if (!isNaN(pos) && pos > -1) {
+        let time = Date.now();
+        if (disconnects.hasOwnProperty(uid))
+            disconnects[uid][0] = pos;
+        else
+            disconnects[uid] = [pos, time];
+
+    } else
         remUserDC(uid);
 }
 
@@ -1901,7 +1906,7 @@ function doCommand(msg) {
             
             '/trigger':()=>{
                 if (data[1]) {
-                    if (typeof data[1] === "string" && data[1].length === 1 && ~'!@#$%^&*()_+-=`~.,?'.indexOf(data[1])) {
+                    if (typeof data[1] === "string" && data[1].length === 1 && ~'!#$%^&*()_+-=`~.,?'.indexOf(data[1])) {
                         TRIGGER = data[1];
                         nodeLog(cc.green('Set trigger to ')+cc.greenBright(data[1]));
                     }
@@ -2691,9 +2696,9 @@ function welcomeUser(id) {
             let user = getUser(id);
             if (!~user || (~user && me && me.id && user.id === me.id)) return;
             if (lw <= 0) {
-                sendMessage("/me Everybody welcome, "+user.username+"!",1000);
+                sendMessage("/me Everybody welcome, "+user.username+"!" + (room.roulette.active ? " Roulette is open right now!" : ""),1000);
             } else {
-                sendMessage("/me Welcome back, "+user.username+"!",1000);
+                sendMessage("/me Welcome back, "+user.username+"!" + (room.roulette.active ? " Roulette is open right now!" : ""),1000);
             }
         }
     }
@@ -2773,7 +2778,7 @@ function countVotes() {
 
 function strIsNum(str) {
     if (typeof str === "number") return true;
-    else if (typeof str === "string") return /^[0-9]+$/.test(str);
+    else if (typeof str === "string") return /^\-?[0-9]+$/.test(str);
     else return false;
 }
 
@@ -2875,11 +2880,11 @@ function muteUser(id, reason, time, cb) {
 }
 
 function kickUser(id, reason) {
-    let user = getUser(id);
-    if (!~user) return;
-    banUser(parseInt(id), reason, 'h', ()=>{
+    const user = getUser(id);
+    if (!~user || user.role >= me.role) return;
+    banUser(user.id, reason, 'h', ()=>{
         setTimeout(function() {
-            unbanUser(id);
+            unbanUser(user.id);
         }, 2500);
     });
 }
@@ -3468,11 +3473,11 @@ function doChatCommand(data, user) {
             let toUser = "";
             if (!~pos) {
                 if (splitMessage.length === 1)
-                    toUser = user.username;
-                else
-                    toUser = -1;
+                    toUser = me.username;
+
+
             } else {
-                toUser = data.message.substr(pos+1).trim();   
+                toUser = data.message.substr(pos+1).trim();
             }
             return toUser;
         };
@@ -3579,7 +3584,7 @@ function doChatCommand(data, user) {
             'blacklists':()=>commands.blacklists.exec(user.role, user.username),
             'shots':()=>{
                 const toUser = simpleGetName();
-                commands.shots.exec(user.role, user.username, user.id, toUser);
+                commands.shots.exec(user.role, user.username, toUser, cmdname);
             },
             'props':()=>{
                 commands.props.exec(user.role, user.username, false);
@@ -3631,6 +3636,23 @@ function doChatCommand(data, user) {
             'disable':()=>{
                 if (splitMessage[1])
                     commands.disable.exec(user.role, splitMessage[1].toLowerCase());
+            },
+            'dclookup':()=>{
+                let targetUser;
+                if (splitMessage.length === 1)
+                    targetUser = user.username;
+                else if (strIsNum(splitMessage[1]))
+                    targetUser = parseInt(splitMessage[1]);
+                else if (~data.message.indexOf('@'))
+                    targetUser = data.message.substr(data.message.indexOf('@')+1).trim();
+                else
+                    return;
+                commands.dclookup.exec(user.role, user.username, targetUser);
+            },
+            'kick':()=>{
+                const at = data.message.indexOf('@');
+                if (!~at) return;
+                commands.kick.exec(user.role, user.username, data.message.substr(at+1).trim());
             }
         };
         cmds['jointime'] = cmds.afktime;
@@ -3750,7 +3772,7 @@ commands['anagram'] = new Command(true,0,"anagram <7-30 character string> :: Ret
     } 
 });
 
-commands['blacklist'] = new Command(true,3,"blacklist <blacklist name> <add // remove|rem> <youtube|yt|1 // soundcloud|sc|2> <video ID // track ID> :: Adds or removes songs to/from a given blacklist. Requires Manager+. 5s cooldown.",function() {
+commands['blacklist'] = new Command(true,3,"blacklist <blacklist name> <add // remove|rem> <youtube|yt|1 // soundcloud|sc|2> <video ID // track ID> :: Adds or removes songs to/from a given blacklist. Requires Manager+.",function() {
     if (!BotSettings.allowRemoteBlacklistEdit) return;
     const username = arguments[1],
         listName = arguments[2],
@@ -3800,9 +3822,10 @@ commands['blacklist'] = new Command(true,3,"blacklist <blacklist name> <add // r
         if (message !== "")
             sendMessage(message);
     }
-}, 5000);
+});
 
-commands['blacklists'] = new Command(true,3,"blacklists :: Returns list of valid blacklist names. Requires Manager+. 2s delay.",function() {
+
+commands['blacklists'] = new Command(true,0,"blacklists :: Returns list of valid blacklist names to be used with the blacklist command. Any rank.",function() {
     let i,
         bl = [],
         username = arguments[1],
@@ -3813,7 +3836,8 @@ commands['blacklists'] = new Command(true,3,"blacklists :: Returns list of valid
     message = "/me [@" + username + "] Blacklists: " + bl.join(', ');
     if (message !== "")
         sendMessage(message);
-}, 2000);
+});
+
 
 commands['commands'] = new Command(true,0,"commands :: Lists active commands and amount of inactive commands. Any rank.",function() {
     let sndmsg = [],
@@ -3872,54 +3896,80 @@ commands['dc'] = new Command(true,0,"dc :: Places you back into the waitlist at 
     }
 });
 
+commands['dclookup'] = new Command(true,0,"dclookup [@username|userID] :: Returns a user's last disconnect time and position. Use their ID if they are not present in the room. Any rank.", function() {
+    const user = ((typeof arguments[2] === "number") ? {id: arguments[2]} : getUser(arguments[2]));
+    if (!~user) return sendMessage("/me [@" + arguments[1] + "] That user was not found in the room. Try using an ID.");
+    else if (disconnects[user.id]) {
+        return sendMessage("/me [@" + arguments[1] + "] That user disconnected " + secsToLabelTime(Date.now() - disconnects[user.id][1], true) + " ago at position " + disconnects[user.id][0] + ".");
+    } else {
+        return sendMessage("/me [@" + arguments[1] + "] Could not find a previous waitlist position for that user.");
+    }
+});
+
 commands['candy'] = new Command(true,0,"candy <@username> :: Give someone a random tasty candy!",function(){
-    const toUser = getUser(arguments[2]);
-    if (!~toUser || (~toUser && arguments[1] === toUser.username)) return;
-    //candy list from ureadmyname's basicBot fork
-    const candies = [
-        "a neapolitan ice cream cone", "a strawberry ice cream cone", "a packet of Hershey's caramels",
-        "a chocolate ice cream cone", "a vanilla ice cream cone", "a Hershey's almond toffee bar",
-        "a packet of Sour Patch Kids", "a Reeses Peanut Butter Cup", "a packet of Jelly Bellys",
-        "a Lindt chocolate bar", "a box of Milk Duds", "a Dove chocolate bar", "a box of Tim Tams",
-        "a pack of Starburst", "a Butterfinger bar", "a box of Raisinets", "a Sour Punch Straw",
-        "an Andes thin mint", "a Charleston Chew", "a bag of M&M's", "an Almond Joy bar",
-        "a NutRageous bar", "a Watermelon Jolly Rancher", "an Apple Jolly Rancher",
-        "a Grape Jolly Rancher", "a Cherry Jolly Rancher", "a Blue Raspberry Jolly Rancher",
-        "a Kinder Bueno", "a MilkyWay bar", "a Snickers bar", "a Tootsie Roll", "a Chokito Bar",
-        "a gum wrapper...", "a Bounty bar", "a Mounds bar", "a Mr. Goodbar", "a PayDay bar",
-        "a Baby Ruth", "a Heath bar", "a Toblerone", "a Wonka Bar", "an Aero Bar", "a Mars Bar",
-        "a Rolo Bar", "a Twix Bar", "a Twizzler", "a KitKat"
-    ];
-    sendMessage("/me @" + arguments[1] + " gave @" + toUser.username + " " + candies[Math.floor(Math.random() * candies.length)] + "!");
+    if (arguments[2].toLowerCase() === me.username.toLowerCase()) {
+        sendMessage("/me eats a candy.");
+    } else if (arguments[1].toLowerCase() === arguments[2].toLowerCase()) {
+        sendMessage("/me @" + arguments[1] + ", don't be so greedy. Share the candy with somebody!");
+    } else if (arguments[2] !== "") {
+
+        const toUser = getUser(arguments[2]);
+        if (!~toUser) return;
+        //candy list from ureadmyname's basicBot fork
+        const candies = [
+            "a neapolitan ice cream cone", "a strawberry ice cream cone", "a packet of Hershey's caramels",
+            "a chocolate ice cream cone", "a vanilla ice cream cone", "a Hershey's almond toffee bar",
+            "a packet of Sour Patch Kids", "a Reeses Peanut Butter Cup", "a packet of Jelly Bellys",
+            "a Lindt chocolate bar", "a box of Milk Duds", "a Dove chocolate bar", "a box of Tim Tams",
+            "a pack of Starburst", "a Butterfinger bar", "a box of Raisinets", "a Sour Punch Straw",
+            "an Andes thin mint", "a Charleston Chew", "a bag of M&M's", "an Almond Joy bar",
+            "a NutRageous bar", "a Watermelon Jolly Rancher", "an Apple Jolly Rancher",
+            "a Grape Jolly Rancher", "a Cherry Jolly Rancher", "a Blue Raspberry Jolly Rancher",
+            "a Kinder Bueno", "a MilkyWay bar", "a Snickers bar", "a Tootsie Roll", "a Chokito Bar",
+            "a gum wrapper...", "a Bounty bar", "a Mounds bar", "a Mr. Goodbar", "a PayDay bar",
+            "a Baby Ruth", "a Heath bar", "a Toblerone", "a Wonka Bar", "an Aero Bar", "a Mars Bar",
+            "a Rolo Bar", "a Twix Bar", "a Twizzler", "a KitKat"
+        ];
+
+        sendMessage("/me @" + arguments[1] + " gave @" + toUser.username + " " + candies[Math.floor(Math.random() * candies.length)] + "!");
+    }
 });
 
 commands['cookie'] = new Command(true,0,"cookie <@username> :: Give someone a cookie!",function(){
-    const toUser = getUser(arguments[2]);
-    if (!~toUser || (~toUser && arguments[1] === toUser.username)) return;
-    //cookie list from basicBot
-    const cookies = [
-        "has given you a chocolate chip cookie!",
-        "has given you a soft homemade oatmeal cookie!",
-        "has given you a plain, dry, old cookie. It was the last one in the bag. Gross.",
-        "gives you a sugar cookie. What, no frosting and sprinkles? 0\/10 would not touch.",
-        "gives you a chocolate chip cookie. Oh wait, those are raisins. Bleck!",
-        "gives you an enormous cookie. Poking it gives you more cookies. Weird.",
-        "gives you a fortune cookie. It reads \"Why aren't you working on any projects?\"",
-        "gives you a fortune cookie. It reads \"Give that special someone a compliment\"",
-        "gives you a fortune cookie. It reads \"Take a risk!\"",
-        "gives you a fortune cookie. It reads \"Go outside.\"",
-        "gives you a fortune cookie. It reads \"Don't forget to eat your veggies!\"",
-        "gives you a fortune cookie. It reads \"Do you even lift?\"",
-        "gives you a fortune cookie. It reads \"m808 pls\"",
-        "gives you a fortune cookie. It reads \"If you move your hips, you'll get all the ladies.\"",
-        "gives you a fortune cookie. It reads \"I love you.\"",
-        "gives you a Golden Cookie. You can't eat it because it is made of gold. Dammit.",
-        "gives you an Oreo cookie with a glass of milk!",
-        "gives you a rainbow cookie made with love :heart:",
-        "gives you an old cookie that was left out in the rain, it's moldy.",
-        "bakes you fresh cookies, it smells amazing."
-    ];
-    sendMessage("/me @" + toUser.username + ", @" + arguments[1] + " " + cookies[Math.floor(Math.random() * cookies.length)]);
+    if (arguments[2].toLowerCase() === me.username.toLowerCase()) {
+        sendMessage("/me eats a cookie.");
+    } else if (arguments[1].toLowerCase() === arguments[2].toLowerCase()) {
+        sendMessage("/me @" + arguments[1] + ", trying to give yourself a cookie, eh? Don't be so greedy!");
+    } else if (arguments[2] !== "") {
+
+        const toUser = getUser(arguments[2]);
+        if (!~toUser) return;
+        //cookie list from basicBot
+        const cookies = [
+            "has given you a chocolate chip cookie!",
+            "has given you a soft homemade oatmeal cookie!",
+            "has given you a plain, dry, old cookie. It was the last one in the bag. Gross.",
+            "gives you a sugar cookie. What, no frosting and sprinkles? 0\/10 would not touch.",
+            "gives you a chocolate chip cookie. Oh wait, those are raisins. Bleck!",
+            "gives you an enormous cookie. Poking it gives you more cookies. Weird.",
+            "gives you a fortune cookie. It reads \"Why aren't you working on any projects?\"",
+            "gives you a fortune cookie. It reads \"Give that special someone a compliment\"",
+            "gives you a fortune cookie. It reads \"Take a risk!\"",
+            "gives you a fortune cookie. It reads \"Go outside.\"",
+            "gives you a fortune cookie. It reads \"Don't forget to eat your veggies!\"",
+            "gives you a fortune cookie. It reads \"Do you even lift?\"",
+            "gives you a fortune cookie. It reads \"m808 pls\"",
+            "gives you a fortune cookie. It reads \"If you move your hips, you'll get all the ladies.\"",
+            "gives you a fortune cookie. It reads \"I love you.\"",
+            "gives you a Golden Cookie. You can't eat it because it is made of gold. Dammit.",
+            "gives you an Oreo cookie with a glass of milk!",
+            "gives you a rainbow cookie made with love :heart:",
+            "gives you an old cookie that was left out in the rain, it's moldy.",
+            "bakes you fresh cookies, it smells amazing."
+        ];
+
+        sendMessage("/me @" + toUser.username + ", @" + arguments[1] + " " + cookies[Math.floor(Math.random() * cookies.length)]);
+    }
 });
 
 commands['disable'] = new Command(true,3,"disable <command name> :: Disable a command. Requires Manager+.",function(){
@@ -3986,6 +4036,16 @@ commands['english'] = new Command(true,2,"english <@username> :: Notify a user i
         if (langMsg === undefined) langMsg = "";
         sendMessage("@" + user.username + ": " + langMsg + "Please speak english.");
     });
+});
+
+commands['kick'] = new Command(true,3,"kick @username :: Bans a user from the room and unbans them 2.5 seconds later, simulating a kick. Requires Manager+.", function() {
+    const user = getUser(arguments[2]);
+    if (!~user) return sendMessage("/me [@" + arguments[1] + "] Could not find that user.");
+    else if (user.id === me.id) return;
+    else {
+        kickUser(user.id, 1);
+        return sendMessage("/me [@" + arguments[1] + "] Kicking user @" + user.username + "...");
+    }
 });
 
 commands['gif'] = new Command(true,0,"gif <tags> :: Grabs a random image from Giphy with the given tags. Any rank. 2s cooldown.",function() {
@@ -4072,29 +4132,30 @@ commands['roll'] = new Command(true,0,"roll [<1-10>|<1-20d1-999999999>] :: Retur
     let splitmsg = arguments[2];
 
     let sndmsg = "";
-    if (splitmsg[1] !== undefined && splitmsg[1].length <= 12 && arrFind(splitmsg[1],'d') > 0 && arrFind(splitmsg[1],'d') < 3) {
-        let dicereg = new RegExp(/(\d{1,2}d\d{1,9})/);
-        if (dicereg.test(splitmsg[1])) {
-            let d,rolls,sides,sum,die;
-            d = splitmsg[1].match(dicereg)[0].split('d');
-            rolls = parseInt(d[0]);
-            sides = parseInt(d[1]);
-            if (rolls > 20 || rolls < 1)
-                rolls = 2;
-            if (sides > 999999999 || sides < 1)
-                sides = 6;
-            sum = 0;
-            die = (rolls > 1 ? "dice" : "die");
+    if (splitmsg[1] && arrFind(splitmsg[1],'d') > 0 && arrFind(splitmsg[1],'d') < 3 && /^(?:\d{1,2}d\d{1,9})$/.test(splitmsg[1])) {
 
-            sndmsg = '@'+data.un+' rolled '+rolls+' '+sides+'-sided '+die+' and got: '
 
-            for (;rolls>=1;rolls--) {
-                sum += Math.floor((Math.random()*sides)+1);
-            }
+        let d,rolls,sides,sum,die;
+        d = splitmsg[1].match(/^(?:\d{1,2}d\d{1,9})$/)[0].split('d');
+        rolls = parseInt(d[0]);
+        sides = parseInt(d[1]);
+        if (rolls > 20 || rolls < 1)
+            rolls = 2;
+        if (sides > 999999999 || sides < 1)
+            sides = 6;
+        sum = 0;
+        die = (rolls > 1 ? "dice" : "die");
 
-            sndmsg += sum.toString();
+        sndmsg = '@'+data.un+' rolled '+rolls+' '+sides+'-sided '+die+' and got: '
 
+        for (;rolls>=1;rolls--) {
+            sum += Math.floor((Math.random()*sides)+1);
         }
+
+
+        sndmsg += sum.toString();
+
+
     } else {
         let roll = 2;
         let combos = [' [dubs!]',' [trips!]',' [quads!]',' [quints!]',' [sexts!]',' [septs!!]',' [octs!!!]',' [nons!!!!]',' [decs!!!!!]'];
@@ -4199,56 +4260,68 @@ commands['set'] = new Command(true,3,"set <option> <value> :: Sets a bot option 
         sendMessage("/me [@" + username + "] " + message);
 });
 
-commands['shots'] = new Command(true,0,"shots|shot|k1tt [@username] :: Buys a random shot for a user, or yourself! Any rank.",function() {
-    if (arguments.length !== 4) return;
-    const username = arguments[1],
-          id = arguments[2],
-          //shots list from ureadmyname's basicBot fork
-          shots = [
-            "Slippery Nipple", "Tequila Slammer", "Irish Car Bomb",
-            "Liquid Cocaine", "Redheaded Slut", "Johnny Walker",
-            "Cement Mixer", "Jack Daniels", "Grasshopper",
-            "Jell-O-Shot", "Sammy Jager", "Black Rose",
-            "Jager Bomb", "Lemon Drop", "Melon Ball",
-            "Fireball", "Jim Beam", "Kamikaze",
-            "Smirnoff", "Tequila", "B-52",
-            "Hot Damn", "Pineapple Upside Down Cake", "White Gummy Bear",
-            "Absolut Bitch", "Absolut Legspreader", "Alice in Wonderland",
-            "Jolly Rancher", "Buttery Nipple", "252",
-            "Captain Coke", "Panty Man", "Kick in the balls",
-            "Mind Eraser", "Motor Oil", "Afterburner",
-            "Partybar Schuffel", "Jack Daniels", "Tes Generaciones",
-            "Passed Out Naked in the Bathroom", "A Kick in the Crotch", "Flaming Lemon Drop",
-            "Purple Hooter", "Cherry Tootsie Pops", "Blow Job",
-            "Scooby Snack", "Surfer on Acid", "Alabama Slammer",
-            "Ohio State Redeye", "Washington Apple", "Cherry Bomb", "Three Wise Men"
-          ],
-          shot = shots[Math.floor(Math.random() * shots.length)];
-    let toUser = -1;
-    if ((typeof arguments[3] === "string" && arguments[3].trim() !== "") && arguments[3] !== -1) {
-        if (typeof arguments[3] === "string" && arguments[3].toLowerCase() === username.toLowerCase())
-            toUser = username;
-        else
-            toUser = getUser(arguments[3]);
-    } else {
-        return;   
+commands['shots'] = new Command(true,0,"shots|shot|k1tt [@username] :: Buy a random shot for a user! Any rank.",function() {
+    if (arguments[2].toLowerCase() === me.username.toLowerCase()) {
+        sendMessage("/me takes a shot.");
+    } else if (arguments[1].toLowerCase() === arguments[2].toLowerCase() && arguments[3] !== "k1tt") {
+        sendMessage("/me @" + arguments[1] + ", buy someone else a shot for once.");
+    } else if (arguments[2] !== "") {
+        const toUser = getUser(arguments[2]);
+        if (!~toUser) return;
+
+
+
+        //shots list from ureadmyname's basicBot fork
+        const shots = [
+
+                "Slippery Nipple", "Tequila Slammer", "Irish Car Bomb",
+                "Liquid Cocaine", "Redheaded Slut", "Johnny Walker",
+                "Cement Mixer", "Jack Daniels", "Grasshopper",
+                "Jell-O-Shot", "Sammy Jager", "Black Rose",
+                "Jager Bomb", "Lemon Drop", "Melon Ball",
+                "Fireball", "Jim Beam", "Kamikaze",
+                "Smirnoff", "Tequila", "B-52",
+                "Hot Damn", "Pineapple Upside Down Cake", "White Gummy Bear",
+                "Absolut Bitch", "Absolut Legspreader", "Alice in Wonderland",
+                "Jolly Rancher", "Buttery Nipple", "252",
+                "Captain Coke", "Panty Man", "Kick in the balls",
+                "Mind Eraser", "Motor Oil", "Afterburner",
+                "Partybar Schuffel", "Jack Daniels", "Tes Generaciones",
+                "Passed Out Naked in the Bathroom", "A Kick in the Crotch", "Flaming Lemon Drop",
+                "Purple Hooter", "Cherry Tootsie Pops", "Blow Job",
+                "Scooby Snack", "Surfer on Acid", "Alabama Slammer",
+                "Ohio State Redeye", "Washington Apple", "Cherry Bomb", "Three Wise Men"
+              ],
+
+              shot = shots[Math.floor(Math.random() * shots.length)];
+
+        if (arguments[3] === "k1tt" && arguments[2].toLowerCase() === arguments[1].toLowerCase()) {
+            sendMessage("/me @" + arguments[1] + " bought themselves a shot of " + shot + "!");
+
+
+
+
+
+
+
+
+
+
+
+
+        } else {
+            sendMessage("/me @" + arguments[1] + " bought @" + toUser.username + " a shot of " + shot + "!");
+
+        }
     }
-    if (shots.length < 1) return;
-    let message = "";
-    if (toUser !== -1 && (toUser === username || (toUser !== username && ~toUser && toUser.id === id))) {
-        if (id === me.id) {
-            message = "/me takes a shot of " + shot + ".";
-        } else {
-            message = "@" + username + " bought themselves a shot of " + shot + "!";
-        }
-    } else if (toUser && ~toUser) {
-        if (toUser.id === me.id) {
-            message = "@" + username + " bought me a shot of " + shot + "!";
-        } else {
-            message = "@" + username + " bought @" + toUser.username + " a shot of " + shot + "!";
-        }
-    } else return;
-    sendMessage(message);
+
+
+
+
+
+
+
+
 });
 
 commands['skip'] = new Command(true,2,"skip [reason] :: Skips current song with optional reason, if valid. Requires Bouncer+.",function() {

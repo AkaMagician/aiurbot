@@ -19,5 +19,5 @@ exports.DEBUG = false;
 
 //TRIGGER: bot's trigger char, all chat messages must start with this (excluding the "trigger" command).
 //This is reverted to "!" in case it becomes invalid; see validateTrigger().
-//Can only be one of these characters: ! @ # $ % ^ & * ( ) _ + - = ` ~ . , ?
+//Can only be one of these characters: ! # $ % ^ & * ( ) _ + - = ` ~ . , ?
 exports.TRIGGER = '!';
