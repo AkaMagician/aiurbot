@@ -1,3 +1,14 @@
+- February 8, 2017
+  - 0.4.5 alpha
+    - Changes
+      - !commands now outputs a link to chatcommands.md and lists inactive commands instead
+      - fixed >10 minute autoskip condition
+      - !stats does not have "Woot/Meh Ratio" at the end of the returned message if the user has 0 mehs
+      - removeUserFromStaff and addStaff: if id matches bot's id, nothing happens
+      - !english now cannot be called on yourself... kind of pointless otherwise
+      - /stafflist and /banlist file layouts slightly more compact and readable
+    - Known Issues
+      - !dc sometimes does not work, still observing this issue
 - February 2, 2017
   - 0.4.4 alpha
     - Changes

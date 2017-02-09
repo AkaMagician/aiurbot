@@ -5,7 +5,7 @@
 *   expandable plug.dj NodeJS bot with some basicBot adaptations (I did not write basicBot!) and then some.
 *   as this is specially for a certain room, some commands are also adapted from the custom basicBot additions github.com/ureadmyname added.
 *   written by zeratul- (https://github.com/zeratul0) specially for https://plug.dj/its-a-trap-and-edm
-*   version 0.4.4
+*   version 0.4.5
 *   ALPHA TESTING
 *   Copyright 2016-2017 zeratul0
 *   You may edit and redistribute this program for your own personal (not commercial) use as long as the author remains credited. Any profit or monetary gain
@@ -49,7 +49,7 @@ const PLATFORM = ((process && process.platform) ? process.platform : "win32");  
 const SC_CLIENT_ID = 'f4fdc0512b7990d11ffc782b2c17e8c2';  //SoundCloud Client ID
 const YT_API_KEY = 'AIzaSyBTqSq0ZhXcGerXRgCKBZSd_BxaM0OZ9g4';  //YouTube API Key
 const TITLE = 'AiurBot';  //bot title
-const VER = '0.4.4 alpha';  //bot version
+const VER = '0.4.5 alpha';  //bot version
 const AUTHOR = 'zeratul0';  //bot author (github)
 const STARTTIME = Date.now();  //the time the bot was started
 const MAX_DISC_TIME = 3600000;  //1 hour; MUST keep above 1000ms; time after a user disconnects when they can use !dc
@@ -1245,7 +1245,7 @@ function handleAdvance(data) {
                         }
                     }
                 }
-                if (!DOSKIP && data.m.duration > 600000 && un.role < 4) { // 10 mins
+                if (!DOSKIP && data.m.duration > 600 && un.role < 4) { // 10 mins
                     warn(cc.yellow("The currently playing song is over 10 minutes."));
                     DOSKIP = true;
                     REASON = "10min";
@@ -1737,11 +1737,11 @@ function doCommand(msg) {
                 nodeLog(cc.green("Downloading ban list..."));
                 getBans((data)=>{
                     if (data.status === "ok" && room) {
-                        let bfr = "ROOM: " + room.slug + "\nTIME: " + Date().toString() + "\nBANS: " + data.data.length + "\n\n",
+                        let bfr = "ROOM: " + room.slug + "\nTIME: " + Date().toString() + "\nBANS: " + data.data.length + "\n\n   NAME    ::    UserID    ::    MODERATOR    ::   BANTIME   ::   DURATION   ::   REASON\n\n",
                             i;
                         const list = data.data;
                         for (i = 0; i < list.length; i++) {
-                            bfr += list[i].username + " (UID: " + list[i].id + ") banned by " + list[i].moderator + " at " + list[i].timestamp + " for " + DURATIONS[0][list[i].duration].toLowerCase() + ". Reason: " + REASONS[0][list[i].reason] + "\n";   
+                            bfr += list[i].username + " :: " + list[i].id + " :: " + list[i].moderator + " :: " + list[i].timestamp + " :: " + DURATIONS[0][list[i].duration].toLowerCase() + " :: " + REASONS[0][list[i].reason] + "\n";
                         }
                         fs.writeFile('data/banList_' + room.slug + '.txt', bfr, function(e) {
                             if (e) error(cc.red(e));
@@ -1757,7 +1757,7 @@ function doCommand(msg) {
                 nodeLog(cc.green("Downloading staff list..."));
                 GET('_/staff', (data)=>{
                    if (data.status === "ok" && room) {
-                        let bfr = "ROOM: " + room.slug + "\nTIME: " + Date().toString() + "\n\n",
+                        let bfr = "ROOM: " + room.slug + "\nTIME: " + Date().toString() + "\n\n   NAME   ::   UserID   ::   GLOBAL ROLE\n\n",
                             i,
                             unk = [],
                             rdjs = [],
@@ -1767,7 +1767,7 @@ function doCommand(msg) {
                             host = [];
                         const list = data.data,
                               toStr = function(user) {
-                                return user.username + " (UID: " + user.id + ") :: signed up on " + user.joined + " :: Global Role: " + gRoleToString(user.gRole) + "\n";
+                                return user.username + " :: " + user.id + " :: " + gRoleToString(user.gRole) + "\n";
                               };
                         for (i = 0; i < list.length; i++) {
                             switch (list[i].role) {
@@ -2484,6 +2484,7 @@ function skipSong(caller, reason, auto, moveUp) {
 }
 
 function addStaff(userID, role) {
+    if (userID === me.id) return;
     POST('_/staff/update', {userID: userID, roleID: role}, (data)=>{
         if (data.status === "ok") {
             nodeLog(cc.green("Successfully added " + userID + " to the staff."));
@@ -2910,6 +2911,7 @@ function unmuteUser(id) {
 }
 
 function removeUserFromStaff(id) {
+    if (id === me.id) return;
     DELETE('_/staff/'+id, (data)=>{
         if (data.status === "ok") {
             nodeLog("Successfully removed " + id + " from the staff.");
@@ -3623,7 +3625,7 @@ function doChatCommand(data, user) {
             },
             'english':()=>{
                 const toUser = getUser(simpleGetName());
-                if (!~toUser) return;
+                if (!~toUser || (~toUser && toUser.id === user.id)) return;
                 commands.english.exec(user.role, toUser.id);
             },
             'swap':()=>{
@@ -3839,22 +3841,19 @@ commands['blacklists'] = new Command(true,0,"blacklists :: Returns list of valid
 });
 
 
-commands['commands'] = new Command(true,0,"commands :: Lists active commands and amount of inactive commands. Any rank.",function() {
+commands['commands'] = new Command(true,0,"commands :: Returns the link containing chat commands and lists any inactive ones. Any rank.",function() {
     let sndmsg = [],
-        inactive = 0,
         i;
     for (i in commands) {
-        if (commands[i].state) {
+        if (!commands[i].state) {
             sndmsg.push(i);
-        } else {
-            inactive++;
         }
     }
     
-    if (sndmsg === []) sndmsg = "No commands currently active.";
+    if (sndmsg === []) sndmsg = "!none!";
     else sndmsg = sndmsg.join(',');
     
-    sendMessage('Commands (' + inactive + ' inactive): '+sndmsg);
+    sendMessage('Default command list: https://git.io/vDEhZ (inactive: ' + sndmsg + ')');
 });
 
 commands['dc'] = new Command(true,0,"dc :: Places you back into the waitlist at your old position ONLY IF you were disconnected while waiting. Any rank. Must be " + secsToLabelTime(MAX_DISC_TIME, true) + " since disconnecting.",function() {
@@ -4351,7 +4350,7 @@ commands['stats'] = new Command(true,0,"stats [@username|#userID] :: Returns the
     let sndmsg = "";
     if (room && seen[room.slug] && seen[room.slug][arguments[2]]) {
         let usr = seen[room.slug][arguments[2]];
-        sndmsg = arguments[1]+"'s overall stats: Plays:"+usr.plays+", W:"+usr.votes.woot+", G:"+usr.votes.grab+", M:"+usr.votes.meh+". Woot/Meh Ratio: "+(usr.votes.meh ? (usr.votes.woot/usr.votes.meh) : "8");
+        sndmsg = arguments[1]+"'s overall stats: Plays:"+usr.plays+", W:"+usr.votes.woot+", G:"+usr.votes.grab+", M:"+usr.votes.meh+"." + (usr.votes.meh ? "Woot/Meh Ratio: " + (usr.votes.woot/usr.votes.meh) : "");
     } else {
         sndmsg = arguments[1]+" was not found.";
     }
