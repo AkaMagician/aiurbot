@@ -9,6 +9,8 @@
       - /stafflist and /banlist file layouts slightly more compact and readable
     - Known Issues
       - !dc sometimes does not work, still observing this issue
+    - Ideas
+      - separate commands into a modular file for easier core updating
 - February 2, 2017
   - 0.4.4 alpha
     - Changes
