@@ -1,10 +1,14 @@
+# Default Commands
+---------
+These are the default commands for AiurBot. Use these commands in chat by using the bot's trigger (! by default) followed by the command name. Some commands require arguments. If any parameters for a command are surrounded in square brackets below, those parameters are optional.
+
 |Command Name|Arguments|Description|Minimum Rank|
 |:----------:|:-------:|-----------|:----------:|
 |8ball       |`<any text>` | Asks the Magic 8 Ball a question.
 |about       || Displays bot's "about" message.
 |afktime     |`[@username|#userID]` | Returns the amount of time a user has been inactive. Gets your own info if no valid argument.
 |anagram     |`<7-30 character string>` | Returns an anagram of the given word(s), retrieved from www.anagramgenius.com.
-|blacklist   |`<blacklist name>` `<add // remove|rem>` `<youtube|yt|1 // soundcloud|sc|2>` `<video ID // track ID>` | Adds or removes songs to/from a given blacklist.|Manager
+|blacklist   |`<blacklist name>` `<add//remove|rem>` `<youtube|yt|1//soundcloud|sc|2>` `<video ID//track ID>` | Adds or removes songs to/from a given blacklist.|Manager
 |blacklists  || Returns list of valid blacklist names to be used with the blacklist command.
 |commands    || Lists active commands and amount of inactive commands.
 |dc          || Places you back into the waitlist at your old position ONLY IF you were disconnected while waiting.Must be undefined since disconnecting.
@@ -15,7 +19,8 @@
 |enable      |`<command name>` | Enable a command.|Manager
 |english     |`<@username>` | Notify a user in their language to speak English if it is required.|Bouncer
 |kick        |`@username`| Bans a user from the room and unbans them 2.5 seconds later, simulating a kick.|Manager
-|gif         |`<tags>`| Grabs a random image from Giphy with the given tags.2s cooldown.
+|gif         |`<tags>`| Grabs a random image from Giphy with the given tags. 2s cooldown.
+|help        |`<chat command name>`| Returns the description of a command.
 |jointime    |`[@username|#userID]` | Returns amount of time since the given user entered the room. Gets your own info if no valid argument.
 |link        || Returns the link of the song currently playing.
 |props       || Show some appreciation for the DJ!
