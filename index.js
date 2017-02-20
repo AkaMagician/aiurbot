@@ -5,7 +5,7 @@
 *   expandable plug.dj NodeJS bot with some basicBot adaptations (I did not write basicBot!) and then some.
 *   as this is specially for a certain room, some commands are also adapted from the custom basicBot additions github.com/ureadmyname added.
 *   written by zeratul- (https://github.com/zeratul0) specially for https://plug.dj/its-a-trap-and-edm
-*   version 0.4.5
+*   version 0.4.6
 *   ALPHA TESTING
 *   Copyright 2016-2017 zeratul0
 *   You may edit and redistribute this program for your own personal (not commercial) use as long as the author remains credited. Any profit or monetary gain
@@ -49,7 +49,7 @@ const PLATFORM = ((process && process.platform) ? process.platform : "win32");  
 const SC_CLIENT_ID = 'f4fdc0512b7990d11ffc782b2c17e8c2';  //SoundCloud Client ID
 const YT_API_KEY = 'AIzaSyBTqSq0ZhXcGerXRgCKBZSd_BxaM0OZ9g4';  //YouTube API Key
 const TITLE = 'AiurBot';  //bot title
-const VER = '0.4.5 alpha';  //bot version
+const VER = '0.4.6 alpha';  //bot version
 const AUTHOR = 'zeratul0';  //bot author (github)
 const STARTTIME = Date.now();  //the time the bot was started
 const MAX_DISC_TIME = 3600000;  //1 hour; MUST keep above 1000ms; time after a user disconnects when they can use !dc
@@ -138,7 +138,7 @@ const BotSettings = {
     hostBypassAutoSkip:true,  //if true, allows the host of the room to bypass autoskip conditions, unless the video is unavailable
     
     sendMOTD:false,  //if true, sends motd after each motdInterval
-    motdInterval: 300000, //ms; 5 minutes
+    motdInterval: 1800000, //ms; 30 minutes
     motd:"",  //motd message to send
     
     announcements:[
@@ -1100,7 +1100,7 @@ function handleUserLeave(data) {
     if (!room) return;
     if (!data) {
         log(LOGTYPES.LEAVE+' '.repeat(HIGHWAY-10) + cc.red('- ') + cc.blackBright('A guest') + cc.red(' left the room.'));
-        room.meta.guests--;
+        room.meta.guests = Math.max(0,room.meta.guests-1);
     } else {
         let user = getUser(data);
         let uname = colorizeName(user);
@@ -2139,7 +2139,8 @@ function doCommand(msg) {
             
             '/commands':()=>{
                 let active = [],
-                    inactive = [];
+                    inactive = [],
+                    i;
                 for (i in commands) {
                     if (commands[i].state) {
                         active.push(cc.greenBright(i));
@@ -3662,7 +3663,6 @@ function doChatCommand(data, user) {
         cmds['stats'] = cmds.afktime;
         cmds['shot'] = cmds.shots;
         cmds['k1tt'] = cmds.shots;
-        
         return (cmds[cmdname] || function() {})();
     }
 }
@@ -3876,7 +3876,7 @@ commands['dc'] = new Command(true,0,"dc :: Places you back into the waitlist at 
         if (typeof MAX_DISC_TIME === "number" && MAX_DISC_TIME > 1000) {
             let dur = (time - record.lastDisconnect);
             if (record.lastDisconnect <= 0) return;
-            else if (lastPos >= 0 && (!~pos || pos < lastPos)) {
+            else if (lastPos >= 0 && (!~pos || pos > lastPos)) {
                 if (dur > MAX_DISC_TIME)
                     sendMessage("[@" + username + "] You disconnected too long ago. Last disconnect: " + secsToLabelTime(time - record.lastDisconnect, true) + " ago.");
                 else if ((time - record.lastDisconnect) <= MAX_DISC_TIME) {

@@ -1,7 +1,7 @@
 {
   "name": "plugdj-aiurbot",
   "author": "zeratul0",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "description": "Plug.dj NodeJS moderation/chat bot with some basicBot adaptations",
   "main": "index.js",
   "dependencies": {

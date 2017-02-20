@@ -1,7 +1,7 @@
 ﻿Timestamp  |  User ID (or event message type)  |  User Flair  |  <Username>  |  Message
 
 Flair:
-    ○       --      Resident DJ
+    @       --      Resident DJ
     >       --      Bouncer
     >>      --      Manager
     >>>     --      Co-Host

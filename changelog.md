@@ -1,3 +1,10 @@
+- February 19, 2017
+  - 0.4.6 alpha
+    - Changes
+      - Hopefully fixed the !dc problem: may have been caused by an incorrect comparison while the user was on the waitlist already
+      - Minimum guest count is now 0 (was going in the negatives for some reason...?)
+      - Changed default motdInterval to 30 minutes (from 5 minutes) within index.js
+      - Edited some root help files; added "errors" folder in case of "directory not found" errors when something goes wrong
 - February 8, 2017
   - 0.4.5 alpha
     - Changes
@@ -27,7 +34,7 @@
 - January 27, 2017
   - 0.4.3 alpha
     - Changes
-      - For some reason, forgot to add check for the new 4th paramater... fixed
+      - For some reason, forgot to add check for the new 4th parameter... fixed
 - January 26, 2017
   - 0.4.2 alpha
     - Changes
