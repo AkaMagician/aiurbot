@@ -3,9 +3,8 @@
 /*
 *   AiurBot
 *   expandable plug.dj NodeJS bot with some basicBot adaptations (I did not write basicBot!) and then some.
-*   as this is specially for a certain room, some commands are also adapted from the custom basicBot additions github.com/ureadmyname added.
 *   written by zeratul- (https://github.com/zeratul0) specially for https://plug.dj/its-a-trap-and-edm
-*   version 0.4.6
+*   version 0.4.7
 *   ALPHA TESTING
 *   Copyright 2016-2017 zeratul0
 *   You may edit and redistribute this program for your own personal (not commercial) use as long as the author remains credited. Any profit or monetary gain
@@ -466,28 +465,28 @@ function setTitle() {
 function POST(endpoint, data, callback) {
     req.post('https://plug.dj/'+endpoint, {json: true, jar: sessJar, body: data}, function(e,r,b) {
         if (e) error(cc.red("POST ERROR: (" + endpoint + "): " + e));
-        else if (typeof callback === "function") callback(b);
+        else if (b && typeof callback === "function") callback(b);
     });
 }
 
 function PUT(endpoint, data, callback) {
     req.put('https://plug.dj/'+endpoint, {json: true, jar: sessJar, body: data}, function(e,r,b) {
         if (e) error(cc.red("PUT ERROR: (" + endpoint + "): " + e));
-        else if (typeof callback === "function") callback(b);
+        else if (b && typeof callback === "function") callback(b);
     });
 }
 
 function GET(endpoint, callback) {
     req.get('https://plug.dj/'+endpoint, {jar: sessJar, json: true}, function(e,r,b) {
         if (e) error(cc.red("GET ERROR: (" + endpoint + "): " + e));
-        else if (typeof callback === "function") callback(b);
+        else if (b && typeof callback === "function") callback(b);
     });
 }
 
 function DELETE(endpoint, callback) {
     req.del('https://plug.dj/'+endpoint, {jar: sessJar, json: true}, function(e,r,b) {
         if (e) error(cc.red("DELETE ERROR: (" + endpoint + "): " + e));
-        else if (typeof callback === "function") callback(b);
+        else if (b && typeof callback === "function") callback(b);
     });
 }
 
@@ -1270,7 +1269,7 @@ function handleAdvance(data) {
                                         skipSong(me.username, REASON, true, true);
                                     }
                                 }
-                            }, 2000);
+                            }, 10000);
                         }
                     }
                 };
@@ -1396,7 +1395,7 @@ function handleSkip(data, modskip) {
 
 function handlePlugMessage(data) {
     if (typeof data === "string") data = ent.decode(data);
-    log(LOGTYPES.PLUG+' '.repeat(HIGHWAY - 10)+cc.magenta(data));
+    log(LOGTYPES.PLUG+' '.repeat(HIGHWAY - 10)+cc.cyanBright(data));
 }
 
 function handleEvent(e) {
@@ -3458,7 +3457,8 @@ Room.prototype.woot = function() { if (room.votes[me.id] === 1) return; if (this
 Room.prototype.meh = function() { if (room.votes[me.id] === -1) return; if (this.playback['h']) {POST('_/votes', {direction:-1, historyID: this.playback.h}); nodeLog(cc.green('meh sent'));} else { warn(cc.yellow('meh not sent; is there a song playing?')); } }
 Room.prototype.grab = function() { if (room.grabs[me.id] === 1) return; if (this.activePlaylist && this.activePlaylist.id > 0 && this.playback['h']) {POST('_/grabs', {playlistID: this.activePlaylist.id, historyID: this.playback['h']}, ()=>{nodeLog(cc.green('grabbed song'));})}}
 
-function doChatCommand(data, user) {
+function doChatCommand(data, userobj) {
+    var user = userobj;
     if (BotSettings.allowChatCommands && data['message'] && ~user) {
         if (typeof user.username === "string")
             user.username = ent.decode(user.username);

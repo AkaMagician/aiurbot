@@ -1,3 +1,10 @@
+- March 10, 2017
+  - 0.4.7 alpha
+    - Changes
+      - BA and Admin user object local rank issue should be fixed
+      - Autoskip delay increased from 2s to 10s to try to prevent rapid request spam
+      - REST functions make sure a response exists before passing it to the callback
+      - plug.dj messages are now colored cyanBright instead of magenta
 - February 19, 2017
   - 0.4.6 alpha
     - Changes
