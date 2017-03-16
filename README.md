@@ -1,4 +1,4 @@
-# AiurBot 0.4.7 alpha
+# AiurBot 0.4.8 alpha
 ## [Changelog](changelog.md)
 kinda lightweight command-line NodeJS moderation/chat bot for plug.dj :feelsgood:
 

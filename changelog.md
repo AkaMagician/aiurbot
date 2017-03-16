@@ -1,3 +1,10 @@
+- March 16, 2017
+  - 0.4.8 alpha
+    - Changes
+      - BA/Admin user role issue actually fixed, I think
+      - Correct version number; 0.4.7's version string was still 0.4.6
+      - Removed lots of strange whitespace and an unused function
+      - Process now exits after 10 seconds if the websocket is closed
 - March 10, 2017
   - 0.4.7 alpha
     - Changes

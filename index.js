@@ -4,7 +4,7 @@
 *   AiurBot
 *   expandable plug.dj NodeJS bot with some basicBot adaptations (I did not write basicBot!) and then some.
 *   written by zeratul- (https://github.com/zeratul0) specially for https://plug.dj/its-a-trap-and-edm
-*   version 0.4.7
+*   version 0.4.8
 *   ALPHA TESTING
 *   Copyright 2016-2017 zeratul0
 *   You may edit and redistribute this program for your own personal (not commercial) use as long as the author remains credited. Any profit or monetary gain
@@ -48,7 +48,7 @@ const PLATFORM = ((process && process.platform) ? process.platform : "win32");  
 const SC_CLIENT_ID = 'f4fdc0512b7990d11ffc782b2c17e8c2';  //SoundCloud Client ID
 const YT_API_KEY = 'AIzaSyBTqSq0ZhXcGerXRgCKBZSd_BxaM0OZ9g4';  //YouTube API Key
 const TITLE = 'AiurBot';  //bot title
-const VER = '0.4.6 alpha';  //bot version
+const VER = '0.4.8 alpha';  //bot version
 const AUTHOR = 'zeratul0';  //bot author (github)
 const STARTTIME = Date.now();  //the time the bot was started
 const MAX_DISC_TIME = 3600000;  //1 hour; MUST keep above 1000ms; time after a user disconnects when they can use !dc
@@ -1524,20 +1524,11 @@ function connect(token) {
         clearInterval(AUTODISABLETIME);
         clearTimeout(ANNOUNCEMENTTIME);
         clearTimeout(MOTDTIME);
+        setTimeout(function() {
+            process.exit(0);
+        }, 10000);
     });
 }
-
-/*function sendData(name, data) {
-    let item = JSON.stringify({
-        'a':'chat',
-        'p':data,
-        't':Date.now()
-    });
-
-    if (wss.readyState === 1) {
-        wss.send(item);
-    }
-}*/
 
 
 //the delay does not work well. need to create an actual queue to send delayed messages in order
@@ -3457,8 +3448,7 @@ Room.prototype.woot = function() { if (room.votes[me.id] === 1) return; if (this
 Room.prototype.meh = function() { if (room.votes[me.id] === -1) return; if (this.playback['h']) {POST('_/votes', {direction:-1, historyID: this.playback.h}); nodeLog(cc.green('meh sent'));} else { warn(cc.yellow('meh not sent; is there a song playing?')); } }
 Room.prototype.grab = function() { if (room.grabs[me.id] === 1) return; if (this.activePlaylist && this.activePlaylist.id > 0 && this.playback['h']) {POST('_/grabs', {playlistID: this.activePlaylist.id, historyID: this.playback['h']}, ()=>{nodeLog(cc.green('grabbed song'));})}}
 
-function doChatCommand(data, userobj) {
-    var user = userobj;
+function doChatCommand(data, user) {
     if (BotSettings.allowChatCommands && data['message'] && ~user) {
         if (typeof user.username === "string")
             user.username = ent.decode(user.username);
@@ -3467,9 +3457,10 @@ function doChatCommand(data, userobj) {
         let cmdname = splitMessage[0].substr(1).toLowerCase();
         if (BotSettings.messageCommands && BotSettings.useMessageCommands && BotSettings.messageCommands[cmdname] && typeof BotSettings.messageCommands[cmdname] === "string") {sendMessage(BotSettings.messageCommands[cmdname], 500); return;}
         if (!user.hasOwnProperty('role')) return;
+        var role = user.role;
         if (user.hasOwnProperty('gRole')) {
-            if (user.gRole === 3) user.role = 6;
-            else if (user.gRole === 5) user.role = 7;
+            if (user.gRole === 3) role = 6;
+            else if (user.gRole === 5) role = 7;
         }
         const simpleGetName = function() {
             const pos = data.message.indexOf('@');
@@ -3477,14 +3468,12 @@ function doChatCommand(data, userobj) {
             if (!~pos) {
                 if (splitMessage.length === 1)
                     toUser = me.username;
-
-
             } else {
                 toUser = data.message.substr(pos+1).trim();
             }
             return toUser;
         };
-        /*always send user.role as first argument*/
+        /*always send role as first argument*/
         const cmds = {
             'help':()=>{
                 let cmd = "";
@@ -3502,16 +3491,16 @@ function doChatCommand(data, userobj) {
                 }
             },
             
-            'about':()=>commands.about.exec(user.role),
-            'dc':()=>commands.dc.exec(user.role, user.username, user.id),
-            'roll':()=>commands.roll.exec(user.role, data, splitMessage),
-            'trigger':()=>commands.trigger.exec(user.role),
-            'anagram':()=>commands.anagram.exec(user.role, data.message, user),
-            'commands':()=>commands.commands.exec(user.role),
+            'about':()=>commands.about.exec(role),
+            'dc':()=>commands.dc.exec(role, user.username, user.id),
+            'roll':()=>commands.roll.exec(role, data, splitMessage),
+            'trigger':()=>commands.trigger.exec(role),
+            'anagram':()=>commands.anagram.exec(role, data.message, user),
+            'commands':()=>commands.commands.exec(role),
             'gif':()=>{
                 if (splitMessage.length > 1) {
                     splitMessage.splice(0,1);
-                    commands.gif.exec(user.role, user.username, splitMessage);
+                    commands.gif.exec(role, user.username, splitMessage);
                 }
             },
             'afktime':()=>{
@@ -3545,17 +3534,17 @@ function doChatCommand(data, userobj) {
                     }
                 }
                 if (cmdname === "afktime")
-                    commands["afktime"].exec(user.role, name, afk);
+                    commands["afktime"].exec(role, name, afk);
                 else if (~['jointime','seentime','stats'].indexOf(cmdname))
-                    commands[cmdname].exec(user.role, name, id);
+                    commands[cmdname].exec(role, name, id);
             },
-            '8ball':()=>{if (splitMessage.length > 1) commands['8ball'].exec(user.role, user.username, data.message.substr(7));},
-            'uptime':()=>commands.uptime.exec(user.role),
-            'link':()=>commands.link.exec(user.role),
-            'skipreasons':()=>commands.skipreasons.exec(user.role, user.username),
+            '8ball':()=>{if (splitMessage.length > 1) commands['8ball'].exec(role, user.username, data.message.substr(7));},
+            'uptime':()=>commands.uptime.exec(role),
+            'link':()=>commands.link.exec(role),
+            'skipreasons':()=>commands.skipreasons.exec(role, user.username),
             'skip':()=>{
-                if (splitMessage.length > 1) commands.skip.exec(user.role, user.username, splitMessage[1].toLowerCase());
-                else commands.skip.exec(user.role, user.username, "none");
+                if (splitMessage.length > 1) commands.skip.exec(role, user.username, splitMessage[1].toLowerCase());
+                else commands.skip.exec(role, user.username, "none");
             },
             'blacklist':()=>{
                 let listName = splitMessage[1],
@@ -3575,7 +3564,7 @@ function doChatCommand(data, userobj) {
                             else if (~arrFind(["soundcloud","sc","2"], format)) format = 2;
 
                             if (mid !== undefined) {
-                                commands.blacklist.exec(user.role, user.username, listName, action, format, mid);
+                                commands.blacklist.exec(role, user.username, listName, action, format, mid);
                             }
 
                         }
@@ -3584,61 +3573,61 @@ function doChatCommand(data, userobj) {
 
                 }
             },
-            'blacklists':()=>commands.blacklists.exec(user.role, user.username),
+            'blacklists':()=>commands.blacklists.exec(role, user.username),
             'shots':()=>{
                 const toUser = simpleGetName();
-                commands.shots.exec(user.role, user.username, toUser, cmdname);
+                commands.shots.exec(role, user.username, toUser, cmdname);
             },
             'props':()=>{
-                commands.props.exec(user.role, user.username, false);
+                commands.props.exec(role, user.username, false);
             },
             'propscunt':()=>{
-                commands.props.exec(user.role, user.username, true);
+                commands.props.exec(role, user.username, true);
             },
             'candy':()=>{
                 const toUser = simpleGetName();
-                commands.candy.exec(user.role, user.username, toUser);
+                commands.candy.exec(role, user.username, toUser);
             },
             'cookie':()=>{
                 const toUser = simpleGetName();
-                commands.cookie.exec(user.role, user.username, toUser);
+                commands.cookie.exec(role, user.username, toUser);
             },
             'startroulette':()=>{
-                if (user.role >= 3) {
+                if (role >= 3) {
                     room.roulette._start();
                 }
             },
             'endroulette':()=>{
-                if (user.role >= 3) {
+                if (role >= 3) {
                     room.roulette._end(true);
                 }
             },
             'set':()=>{
                 if (splitMessage.length === 2) {
-                    commands.set.exec(user.role, user.username, splitMessage[1], null);
+                    commands.set.exec(role, user.username, splitMessage[1], null);
                 } else if (splitMessage.length >= 3) {
                     if (splitMessage[1].toLowerCase() === 'motd') {
-                        commands.set.exec(user.role, user.username, splitMessage[1], data.message.substr((TRIGGER + "set motd ").length).trim());
+                        commands.set.exec(role, user.username, splitMessage[1], data.message.substr((TRIGGER + "set motd ").length).trim());
                     } else {
-                        commands.set.exec(user.role, user.username, splitMessage[1], splitMessage[2].toLowerCase());
+                        commands.set.exec(role, user.username, splitMessage[1], splitMessage[2].toLowerCase());
                     }
                 } else return;
             },
             'english':()=>{
                 const toUser = getUser(simpleGetName());
                 if (!~toUser || (~toUser && toUser.id === user.id)) return;
-                commands.english.exec(user.role, toUser.id);
+                commands.english.exec(role, toUser.id);
             },
             'swap':()=>{
-                commands.swap.exec(user.role, data.message);
+                commands.swap.exec(role, data.message);
             },
             'enable':()=>{
                 if (splitMessage[1])
-                    commands.enable.exec(user.role, splitMessage[1].toLowerCase());
+                    commands.enable.exec(role, splitMessage[1].toLowerCase());
             },
             'disable':()=>{
                 if (splitMessage[1])
-                    commands.disable.exec(user.role, splitMessage[1].toLowerCase());
+                    commands.disable.exec(role, splitMessage[1].toLowerCase());
             },
             'dclookup':()=>{
                 let targetUser;
@@ -3650,12 +3639,12 @@ function doChatCommand(data, userobj) {
                     targetUser = data.message.substr(data.message.indexOf('@')+1).trim();
                 else
                     return;
-                commands.dclookup.exec(user.role, user.username, targetUser);
+                commands.dclookup.exec(role, user.username, targetUser);
             },
             'kick':()=>{
                 const at = data.message.indexOf('@');
                 if (!~at) return;
-                commands.kick.exec(user.role, user.username, data.message.substr(at+1).trim());
+                commands.kick.exec(role, user.username, data.message.substr(at+1).trim());
             }
         };
         cmds['jointime'] = cmds.afktime;
@@ -4267,12 +4256,8 @@ commands['shots'] = new Command(true,0,"shots|shot|k1tt [@username] :: Buy a ran
     } else if (arguments[2] !== "") {
         const toUser = getUser(arguments[2]);
         if (!~toUser) return;
-
-
-
         //shots list from ureadmyname's basicBot fork
         const shots = [
-
                 "Slippery Nipple", "Tequila Slammer", "Irish Car Bomb",
                 "Liquid Cocaine", "Redheaded Slut", "Johnny Walker",
                 "Cement Mixer", "Jack Daniels", "Grasshopper",
@@ -4291,36 +4276,13 @@ commands['shots'] = new Command(true,0,"shots|shot|k1tt [@username] :: Buy a ran
                 "Scooby Snack", "Surfer on Acid", "Alabama Slammer",
                 "Ohio State Redeye", "Washington Apple", "Cherry Bomb", "Three Wise Men"
               ],
-
               shot = shots[Math.floor(Math.random() * shots.length)];
-
         if (arguments[3] === "k1tt" && arguments[2].toLowerCase() === arguments[1].toLowerCase()) {
             sendMessage("/me @" + arguments[1] + " bought themselves a shot of " + shot + "!");
-
-
-
-
-
-
-
-
-
-
-
-
         } else {
             sendMessage("/me @" + arguments[1] + " bought @" + toUser.username + " a shot of " + shot + "!");
-
         }
     }
-
-
-
-
-
-
-
-
 });
 
 commands['skip'] = new Command(true,2,"skip [reason] :: Skips current song with optional reason, if valid. Requires Bouncer+.",function() {
