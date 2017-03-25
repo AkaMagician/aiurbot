@@ -6,6 +6,8 @@ Currently in ALPHA testing, this bot may be missing some events. There might be 
 
 Reconnecting is not a thing yet. If plug.dj goes down, you will have to manually restart the bot. If you're experienced with NodeJS, you can maybe rig up a reconnect feature for yourself in the meantime.
 
+**I recommend changing the YouTube API key located in index.js with one of your own (it is free to get a key). The default key could stop working at any time, breaking things such as unavailability skip.**
+
 usage
 ------
 easy mode:
