@@ -1,10 +1,11 @@
-# AiurBot 0.4.8 alpha
+# AiurBot 0.4.9 alpha
+(now recognizes new roles!)
 ## [Changelog](changelog.md)
 kinda lightweight command-line NodeJS moderation/chat bot for plug.dj :feelsgood:
 
 Currently in ALPHA testing, this bot may be missing some events. There might be some errors too. However, this bot is pretty easy to use and can be left unattended in most cases.
 
-Reconnecting is not a thing yet. If plug.dj goes down, you will have to manually restart the bot. If you're experienced with NodeJS, you can maybe rig up a reconnect feature for yourself in the meantime.
+Reconnecting is not a thing yet. If plug.dj goes down, you will have to manually restart the bot. If you're experienced with NodeJS, you can maybe rig up a reconnect feature for yourself in the meantime, like a keepalive thing for example.
 
 **I recommend changing the YouTube API key located in index.js with one of your own (it is free to get a key). The default key could stop working at any time, breaking things such as unavailability skip.**
 
