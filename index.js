@@ -4,7 +4,7 @@
 *   AiurBot
 *   expandable plug.dj NodeJS bot with some basicBot adaptations (I did not write basicBot!) and then some.
 *   written by zeratul- (https://github.com/zeratul0) specially for https://plug.dj/its-a-trap-and-edm
-*   version 0.4.8
+*   version 0.4.9
 *   ALPHA TESTING
 *   Copyright 2016-2017 zeratul0
 *   You may edit and redistribute this program for your own personal (not commercial) use as long as the author remains credited. Any profit or monetary gain
@@ -48,7 +48,7 @@ const PLATFORM = ((process && process.platform) ? process.platform : "win32");  
 const SC_CLIENT_ID = 'f4fdc0512b7990d11ffc782b2c17e8c2';  //SoundCloud Client ID
 const YT_API_KEY = 'AIzaSyBTqSq0ZhXcGerXRgCKBZSd_BxaM0OZ9g4';  //YouTube API Key
 const TITLE = 'AiurBot';  //bot title
-const VER = '0.4.8 alpha';  //bot version
+const VER = '0.4.9 alpha';  //bot version
 const AUTHOR = 'zeratul0';  //bot author (github)
 const STARTTIME = Date.now();  //the time the bot was started
 const MAX_DISC_TIME = 3600000;  //1 hour; MUST keep above 1000ms; time after a user disconnects when they can use !dc
@@ -671,7 +671,7 @@ function startTimer(type) {
                             //10 minutes
                             if (!user.isAFK && (Date.now() - user.lastActivity) >= 600000) { 
                                 room.userlist[i].isAFK = true;
-                            } else if (me.role >= 2 && BotSettings.doAFKCheck && user.isAFK && (Date.now() - user.lastActivity) >= 7200000 && ~getWaitlistPos(user.id)) {
+                            } else if (me.role >= 2000 && BotSettings.doAFKCheck && user.isAFK && (Date.now() - user.lastActivity) >= 7200000 && ~getWaitlistPos(user.id)) {
                                 room.userlist[i].warn++;
                                 let warns = room.userlist[i].warn;
                                 warn(cc.yellow(user.username + " has been AFK for at least 2 hours and is on the waitlist. Now has " + warns + " warn(s)."));
@@ -732,7 +732,7 @@ function startTimer(type) {
             if (room) {
                 if (room.roulette.active) return;
                 room.roulette._cleanup();
-                if (BotSettings.doRoulette && me && me.role >= 3) {
+                if (BotSettings.doRoulette && me && me.role >= 3000) {
                     room.roulette.timer = setTimeout(function() {
                         if (room && BotSettings.doRoulette)
                             room.roulette._start();
@@ -1199,11 +1199,11 @@ function handleAdvance(data) {
             room.playback = data;
             if (BotSettings.autoWoot)
                 setTimeout(()=>room.woot(),2000);
-            if (BotSettings.autoStuckSkip && data.m.duration !== undefined && me.role >= 2) {
+            if (BotSettings.autoStuckSkip && data.m.duration !== undefined && me.role >= 2000) {
                 let current = data.m.format + ":" + data.m.cid;
                 let dj = data.c;
                 STUCKSKIPTIME = setTimeout(function() {
-                    if (BotSettings.autoStuckSkip && room && me.role >= 2) {
+                    if (BotSettings.autoStuckSkip && room && me.role >= 2000) {
                         let pb = room.playback.m;
                         let currentDJ = room.booth.currentDJ;
                         if (pb.format && pb.cid && (pb.format + ":" + pb.cid) === current && dj === currentDJ) {
@@ -1244,7 +1244,7 @@ function handleAdvance(data) {
                         }
                     }
                 }
-                if (!DOSKIP && data.m.duration > 600 && un.role < 4) { // 10 mins
+                if (!DOSKIP && data.m.duration > 600 && un.role < 4000) { // 10 mins
                     warn(cc.yellow("The currently playing song is over 10 minutes."));
                     DOSKIP = true;
                     REASON = "10min";
@@ -1256,13 +1256,13 @@ function handleAdvance(data) {
                 }
                 
                 const SKIP = function() {
-                    if (DOSKIP && REASON && BotSettings.doAutoSkip && me.role >= 2) {
-                        if (REASON !== "unavailable" && BotSettings.hostBypassAutoSkip && un.role === 5) {}
+                    if (DOSKIP && REASON && BotSettings.doAutoSkip && me.role >= 2000) {
+                        if (REASON !== "unavailable" && BotSettings.hostBypassAutoSkip && un.role === 5000) {}
                         else {
                             let current = data.m.format + ":" + data.m.cid;
                             let dj = data.c;
                             setTimeout(()=>{
-                                if (BotSettings.doAutoSkip && room && me.role >= 2) {
+                                if (BotSettings.doAutoSkip && room && me.role >= 2000) {
                                     let pb = room.playback.m;
                                     let currentDJ = room.booth.currentDJ;
                                     if (pb.format && pb.cid && (pb.format + ":" + pb.cid) === current && dj === currentDJ) {
@@ -1761,11 +1761,11 @@ function doCommand(msg) {
                               };
                         for (i = 0; i < list.length; i++) {
                             switch (list[i].role) {
-                                case 5: host.push(list[i]); break;
-                                case 4: coh.push(list[i]); break;
-                                case 3: mgr.push(list[i]); break;
-                                case 2: boun.push(list[i]); break;
-                                case 1: rdjs.push(list[i]); break;
+                                case 5000: host.push(list[i]); break;
+                                case 4000: coh.push(list[i]); break;
+                                case 3000: mgr.push(list[i]); break;
+                                case 2000: boun.push(list[i]); break;
+                                case 1000: rdjs.push(list[i]); break;
                                 default: unk.push(list[i]); break;
                             }
                         }
@@ -1809,7 +1809,7 @@ function doCommand(msg) {
             
             '/roles':()=>{
                 info(cc.cyan("::: ") + cc.cyanBright("ROLES") + cc.cyan(" :::"));
-                for (i = 1; i <= 5; i++) {
+                for (i = 1000; i <= 5000; i+=1000) {
                     info(cc.blueBright(roleToString(i)) + " " + cc.blue(i));
                 }
             },
@@ -1817,9 +1817,9 @@ function doCommand(msg) {
             '/addstaff':()=>{
                 if (data.length >= 3) {
                     const role = parseInt(data[1]);
-                    if (role < 1 || role > 5) {
-                        return error(cc.red("Role must be between 1 and 5. Type /roles for a list"));
-                    } else if (me.role < 5 && role >= me.role) {
+                    if (role < 1000 || role > 5000) {
+                        return error(cc.red("Role must be between 1000 and 5000. Type /roles for a list"));
+                    } else if (me.role < 5000 && role >= me.role) {
                         return error(cc.red("You cannot promote someone to your rank or above."));
                     } else {
                         if (strIsNum(data[2]))
@@ -1833,7 +1833,7 @@ function doCommand(msg) {
                         }
                     }
                 } else {
-                    nodeLog(cc.green("addstaff usage: /addstaff <role 1-5> <@username (in room)|user ID>"));
+                    nodeLog(cc.green("addstaff usage: /addstaff <role 1000-5000> <@username (in room)|user ID>"));
                 }
             },
             
@@ -2256,13 +2256,13 @@ function updateMentionRegex() {
             mentions.push("djs");
         if (me.role > 0) {
             mentions.push("staff");
-            if (me.role === 1)
+            if (me.role === 1000)
                 mentions.push("rdjs");
-            else if (me.role === 2)
+            else if (me.role === 2000)
                 mentions.push("bouncers");
-            else if (me.role === 3)
+            else if (me.role === 3000)
                 mentions.push("managers");
-            else if (me.role >= 4) //co-hosts belong with hosts I think...?
+            else if (me.role >= 4000) //co-hosts belong with hosts I think...?
                 mentions.push("hosts");
         }
         
@@ -2994,9 +2994,9 @@ function colorizeName(user, doFlair, bracket) {
     if (doFlair) {
 
         switch (gRole) {
-            case 3:
+            case 3000:
                 flair+=cc.greenBright('$'); break;
-            case 5:
+            case 5000:
                 flair+=cc.blueBright('$'); break;
             default:
                 flair+=' '; break;
@@ -3014,18 +3014,18 @@ function colorizeName(user, doFlair, bracket) {
         switch (role) {
             case 0:
                 flair+='     '; break;
-            case 1:
+            case 1000:
                 flair+=cc.magenta('@    '); break;
-            case 2:
+            case 2000:
                 flair+=cc.magenta('>    '); break;
-            case 3:
+            case 3000:
                 flair+=cc.magenta('>>   '); break;
-            case 4:
+            case 4000:
                 flair+=cc.magenta('>>>  '); break;
-            case 5:
+            case 5000:
                 flair+=cc.magenta('>>>! '); break;
             default:
-                flair+=cc.redBright(role+'????'); break;
+                flair+=cc.redBright(role+' '); break;
         }
 
         switch (user.id) {
@@ -3048,10 +3048,10 @@ function colorizeName(user, doFlair, bracket) {
             name=cc.cyan(name); break;
         default:
             switch (gRole) {
-                case 3:
+                case 3000:
                     name = cc.greenBright(name);
                     break;
-                case 5:
+                case 5000:
                     name = cc.blueBright(name);
                     break;
                 default:
@@ -3064,12 +3064,12 @@ function colorizeName(user, doFlair, bracket) {
                                 else name = cc.whiteBright(name);
                             }
                             break;
-                        case 1:
-                        case 2:
-                        case 3:
-                        case 4:
+                        case 1000:
+                        case 2000:
+                        case 3000:
+                        case 4000:
                             name=cc.magenta(name); break;
-                        case 5:
+                        case 5000:
                             name = cc.magentaBright(name); break;
                         default:
                             break;
@@ -3206,10 +3206,10 @@ function gRoleToString(role) {
         case 0:
             str = "User";
             break;
-        case 3:
+        case 3000:
             str = "Brand Ambassador";
             break;
-        case 5:
+        case 5000:
             str = "plug.dj Admin";
             break;
         default:
@@ -3226,25 +3226,25 @@ function roleToString(role) {
         case 0:
             str = "User";
             break;
-        case 1:
+        case 1000:
             str = "Resident DJ";
             break;
-        case 2:
+        case 2000:
             str = "Bouncer";
             break;
-        case 3:
+        case 3000:
             str = "Manager";
             break;
-        case 4:
+        case 4000:
             str = "Co-Host";
             break;
-        case 5:
+        case 5000:
             str = "Host";
             break;
-        case 6:
+        case 60000:
             str = "Brand Ambassador";
             break;
-        case 7:
+        case 70000:
             str = "plug.dj Admin";
             break;
         default:
@@ -3459,8 +3459,8 @@ function doChatCommand(data, user) {
         if (!user.hasOwnProperty('role')) return;
         var role = user.role;
         if (user.hasOwnProperty('gRole')) {
-            if (user.gRole === 3) role = 6;
-            else if (user.gRole === 5) role = 7;
+            if (user.gRole === 3000) role = 60000;
+            else if (user.gRole === 5000) role = 70000;
         }
         const simpleGetName = function() {
             const pos = data.message.indexOf('@');
@@ -3593,12 +3593,12 @@ function doChatCommand(data, user) {
                 commands.cookie.exec(role, user.username, toUser);
             },
             'startroulette':()=>{
-                if (role >= 3) {
+                if (role >= 3000) {
                     room.roulette._start();
                 }
             },
             'endroulette':()=>{
-                if (role >= 3) {
+                if (role >= 3000) {
                     room.roulette._end(true);
                 }
             },
@@ -3693,13 +3693,13 @@ Command.prototype.getHelp = function() {if (Date.now() - this.lastHelp >= 1000) 
 
 /* RANK VALUES
 *  0 user
-*  1 resident dj
-*  2 bouncer
-*  3 manager
-*  4 co-host
-*  5 host
-*  6 brand ambassador
-*  7 plug.dj admin
+*  1000 resident dj
+*  2000 bouncer
+*  3000 manager
+*  4000 co-host
+*  5000 host
+*  60000 brand ambassador
+*  70000 plug.dj admin
 */
 
 /*commands['command name here'] = new Command(active upon start?, minimum rank to use inclusive (see above comment for list), help string (if TRIGGER+"help" is received), functionality)*/
@@ -3763,7 +3763,7 @@ commands['anagram'] = new Command(true,0,"anagram <7-30 character string> :: Ret
     } 
 });
 
-commands['blacklist'] = new Command(true,3,"blacklist <blacklist name> <add // remove|rem> <youtube|yt|1 // soundcloud|sc|2> <video ID // track ID> :: Adds or removes songs to/from a given blacklist. Requires Manager+.",function() {
+commands['blacklist'] = new Command(true,3000,"blacklist <blacklist name> <add // remove|rem> <youtube|yt|1 // soundcloud|sc|2> <video ID // track ID> :: Adds or removes songs to/from a given blacklist. Requires Manager+.",function() {
     if (!BotSettings.allowRemoteBlacklistEdit) return;
     const username = arguments[1],
         listName = arguments[2],
@@ -3960,7 +3960,7 @@ commands['cookie'] = new Command(true,0,"cookie <@username> :: Give someone a co
     }
 });
 
-commands['disable'] = new Command(true,3,"disable <command name> :: Disable a command. Requires Manager+.",function(){
+commands['disable'] = new Command(true,3000,"disable <command name> :: Disable a command. Requires Manager+.",function(){
     const cmdname = arguments[1];
     if (commands.hasOwnProperty(cmdname) && !~arrFind(['enable', 'disable'], cmdname)) {
         if (commands[cmdname].state === false) {
@@ -3972,7 +3972,7 @@ commands['disable'] = new Command(true,3,"disable <command name> :: Disable a co
     }
 });
 
-commands['enable'] = new Command(true,3,"enable <command name> :: Enable a command. Requires Manager+.",function(){
+commands['enable'] = new Command(true,3000,"enable <command name> :: Enable a command. Requires Manager+.",function(){
     const cmdname = arguments[1];
     if (commands.hasOwnProperty(cmdname) && !~arrFind(['enable', 'disable'], cmdname)) {
         if (commands[cmdname].state === true) {
@@ -3984,7 +3984,7 @@ commands['enable'] = new Command(true,3,"enable <command name> :: Enable a comma
     }
 });
 
-commands['english'] = new Command(true,2,"english <@username> :: Notify a user in their language to speak English if it is required. Requires Bouncer+.",function(){
+commands['english'] = new Command(true,2000,"english <@username> :: Notify a user in their language to speak English if it is required. Requires Bouncer+.",function(){
     const id = arguments[1],
         langs = {
             "en": "",
@@ -4026,7 +4026,7 @@ commands['english'] = new Command(true,2,"english <@username> :: Notify a user i
     });
 });
 
-commands['kick'] = new Command(true,3,"kick @username :: Bans a user from the room and unbans them 2.5 seconds later, simulating a kick. Requires Manager+.", function() {
+commands['kick'] = new Command(true,3000,"kick @username :: Bans a user from the room and unbans them 2.5 seconds later, simulating a kick. Requires Manager+.", function() {
     const user = getUser(arguments[2]);
     if (!~user) return sendMessage("/me [@" + arguments[1] + "] Could not find that user.");
     else if (user.id === me.id) return;
@@ -4187,7 +4187,7 @@ commands['seentime'] = new Command(true,0,"seentime [@username|#userID] :: Retur
     sendMessage(sndmsg);
 });
 
-commands['set'] = new Command(true,3,"set <option> <value> :: Sets a bot option to the given value. If no value is given, returns the current value of it. List of valid options: https://git.io/vM9aD Requires Manager+.",function(){
+commands['set'] = new Command(true,3000,"set <option> <value> :: Sets a bot option to the given value. If no value is given, returns the current value of it. List of valid options: https://git.io/vM9aD Requires Manager+.",function(){
     const username = arguments[1],
         option = arguments[2].toLowerCase(),
         valid = {
@@ -4285,12 +4285,12 @@ commands['shots'] = new Command(true,0,"shots|shot|k1tt [@username] :: Buy a ran
     }
 });
 
-commands['skip'] = new Command(true,2,"skip [reason] :: Skips current song with optional reason, if valid. Requires Bouncer+.",function() {
+commands['skip'] = new Command(true,2000,"skip [reason] :: Skips current song with optional reason, if valid. Requires Bouncer+.",function() {
     if (arguments.length !== 3) return;
     skipSong(arguments[1], arguments[2], false, true);
 });
 
-commands['skipreasons'] = new Command(true,2,"skipreasons :: Lists reasons that can be used with " + TRIGGER + "skip. Requires Bouncer+.", function() {
+commands['skipreasons'] = new Command(true,2000,"skipreasons :: Lists reasons that can be used with " + TRIGGER + "skip. Requires Bouncer+.", function() {
     if (arguments.length !== 2) return;
     let reasons = BotSettings.skipReasons;
     let sndmsg = "[@" + arguments[1] + "] Skip reasons: ";
@@ -4319,7 +4319,7 @@ commands['stats'] = new Command(true,0,"stats [@username|#userID] :: Returns the
     sendMessage(sndmsg);
 });
 
-commands['swap'] = new Command(true,3,"swap @user1 @user2 :: Swaps positions of two users in the waitlist. At least one must be in the waitlist. Requires Manager+.", function () {
+commands['swap'] = new Command(true,3000,"swap @user1 @user2 :: Swaps positions of two users in the waitlist. At least one must be in the waitlist. Requires Manager+.", function () {
     if (arguments.length !== 2) return;
     const message = arguments[1],
         atx = message.indexOf('@'),

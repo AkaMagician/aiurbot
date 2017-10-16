@@ -1,3 +1,7 @@
+- October 15, 2017
+  - 0.4.9 alpha
+    - Changes
+      - New role values are now recognized, should work now
 - March 16, 2017
   - 0.4.8 alpha
     - Changes
