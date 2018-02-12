@@ -34,3 +34,22 @@ These are the default commands for AiurBot. Use these commands in chat by using 
 |swap        |`@user1` `@user2` | Swaps positions of two users in the waitlist. At least one must be in the waitlist.|Manager
 |trigger     || Returns current trigger of the bot. This can be called with any valid trigger character.
 |uptime      || Returns uptime of this bot.
+"ytho":"http://i.imgur.com/yNlQWRM.jpg",
+"cbg":"http://i.imgur.com/8ohO6lE.png",
+"woosh":"http://i.imgur.com/fWSHCVJ.gif",
+"thafuck":"https://i.imgur.com/CRumsLk.gif",
+"mehspam":"Please stop spamming meh, its really annoying for those of us who use !RCS. Continue spamming meh and it WILL result in a ban.",
+"spoopy":"https://media1.giphy.com/media/jRpeVKxEESNhe/giphy.gif",
+"imgreactions":"/me !rules,!ytho,!thafuck,!woosh,!ayylmao,!cbg,!spoopy,!illuminati,!attentionwhore1,!attentionwhore2,!gtfo,!stfu,!:brushybrushy:,!yoink,!tap",
+"attentionwhore1":"https://i.imgur.com/kYYiXdF.jpg",
+"attentionwhore2":"https://i.imgur.com/kgWlK8l.gif",
+"gtfo":"https://i.imgur.com/Q91xEea.gif",
+"stfu":"https://i.imgur.com/Snf7uIV.gif",
+"som":"/me Just an FYI this isn't an anti-meh room. If someone uses the meh button this is allowed, if said person then proceeds to talk shit about your or someone elses play then inform a *staff* member.  DO check your feelings at the door.",
+":brushybrushy:":"https://i.imgur.com/w7Us6Fc.gif",
+"tap":"https://media.tenor.com/images/c326634b553a8ad20c6142592d8fe01d/tenor.gif",
+"yoink":"http://i.imgur.com/XQtLOMo.gif",
+"riggedadminhax=1":"Admin roulette hacks activated!",
+"riggedadminhax=0":"Admin roulette hacks deactivated!",
+"riggedadminhax=2":"Pfft, you actually though this was a useful command? Try again."
+		
